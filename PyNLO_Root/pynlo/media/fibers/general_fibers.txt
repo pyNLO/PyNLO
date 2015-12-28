@@ -1,0 +1,27 @@
+{
+    "dudley": {
+        "_id": {
+            "py/object": "bson.objectid.ObjectId",
+            "py/state": {
+                "py/bytes": "SM=B7=DFi@\t=10P=C2=D6=90"
+            }
+        },
+        "dispersion_data": [
+            -11.83,
+            0.081038,
+            -9.5205e-05,
+            2.0737e-07,
+            -5.3943e-10,
+            1.3486e-12,
+            -2.5495e-15,
+            3.0524e-18,
+            -1.714e-21
+        ],
+        "dispersion_format": "GVD",
+        "dispersion_gvd_center_wavelength": 835.0,
+        "dispersion_gvd_units": "ps^n/km",
+        "gamma": 0.11,
+        "is_gain": false,
+        "name": "dudley"
+    }
+}
