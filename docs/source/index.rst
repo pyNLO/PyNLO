@@ -6,11 +6,7 @@
 Welcome to pyNLO's documentation!
 =================================
 
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
+.. include:: contents.rst.inc
 
 
 Indices and tables
