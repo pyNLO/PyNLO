@@ -9,5 +9,5 @@ setup(name='pyNLO',
       author_email='ycasg@colorado.edu',
       url='https://github.com/ycasg/PyNLO',
       packages=['pynlo'],
-      package_dir = ['pynlo', 'src/pynlo'],
+      package_dir = {'pynlo': 'src/pynlo'},
      )

@@ -47,5 +47,6 @@ Temporary Items
 .apdisk
 # Docs build directory
 docs/build/*
+build/*
 # Compiled python
 *.pyc
