@@ -1,4 +1,3 @@
-curses==2.2
 aafigure==0.5
 alabaster==0.7.6
 alembic==0.7.6
