@@ -6,7 +6,7 @@ nose==1.3.7
 nose-cov==1.6
 nose-fixes==1.3
 numpy==1.9.2
-pyFFTW==0.10.0
+pyFFTW>0.9.0
 pytest==2.7.3.dev0
 pytest-bench==0.3.0
 pytest-cache==1.0
