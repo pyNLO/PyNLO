@@ -45,3 +45,7 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+# Docs build directory
+docs/build/*
+# Compiled python
+*.pyc
