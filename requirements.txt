@@ -8,11 +8,11 @@ astroid==1.3.6
 astropy==1.0.3
 atom==0.3.10
 Babel==1.3
-backports.datetime-timestamp==1.0.2.dev0
-backports.functools-lru-cache==1.0.2.dev0
-backports.method-request==1.0.1.dev0
-backports.shutil-get-terminal-size==1.0.0
-backports.ssl-match-hostname==3.4.0.2
+backports.datetime-timestamp>=1.0.2.dev0
+backports.functools-lru-cache>=1.0.2.dev0
+backports.method-request>=1.0.1.dev0
+backports.shutil-get-terminal-size>=1.0.0
+backports.ssl-match-hostname>=3.4.0.2
 Beaker==1.7.0
 BeautifulSoup==3.2.1
 beautifulsoup4==4.3.2
