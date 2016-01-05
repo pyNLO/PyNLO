@@ -18,7 +18,21 @@ latex_documents = [
    u'', 'manual'),
 ]
 
+if on_rtd:
+    if sys.version[0] == '3':  # Python 3
+        from unittest.mock import MagicMock
+    elif sys.version[0] == '2':  # Python 2
+        from mock import Mock as MagicMock
+    else:
+        raise ImportError("Don't know how to import MagicMock.")
 
+    class Mock(MagicMock):
+        @classmethod
+        def __getattr__(cls, name):
+                return Mock()
+
+    MOCK_MODULES = ['pyfftw']
+    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
 ###########################################################################
