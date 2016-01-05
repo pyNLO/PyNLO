@@ -87,9 +87,15 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
+<<<<<<< HEAD
 	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/PyNLO.qhcp"
 	@echo "To view the help file:"
 	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/PyNLO.qhc"
+=======
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/pyNLO.qhcp"
+	@echo "To view the help file:"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/pyNLO.qhc"
+>>>>>>> origin/master
 
 applehelp:
 	$(SPHINXBUILD) -b applehelp $(ALLSPHINXOPTS) $(BUILDDIR)/applehelp
@@ -104,8 +110,13 @@ devhelp:
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
+<<<<<<< HEAD
 	@echo "# mkdir -p $$HOME/.local/share/devhelp/PyNLO"
 	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/PyNLO"
+=======
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/pyNLO"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/pyNLO"
+>>>>>>> origin/master
 	@echo "# devhelp"
 
 epub:
