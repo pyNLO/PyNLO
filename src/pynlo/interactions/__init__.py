@@ -22,3 +22,4 @@
 #-----------------------------------------------------------------------
 
 
+from pynlo.interactions import ThreeWaveMixing, FourWaveMixing

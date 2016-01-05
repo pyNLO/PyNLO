@@ -17,8 +17,5 @@
 #
 
 
-#-----------------------------------------------------------------------
-# Evolution of the pulse through the material
-#-----------------------------------------------------------------------
-
-
+from pynlo.media import crystals
+from pynlo.media import fiber
