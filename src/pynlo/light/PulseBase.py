@@ -194,7 +194,7 @@ class Pulse:
         r""" Set the value of the frequency-domain electric field.
         Parameters
         ----------
-        AW_new: complex vector
+        AW_new : complex vector
             New electric field values. """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
@@ -206,7 +206,7 @@ class Pulse:
         r""" Set the value of the time-domain electric field.
         Parameters
         ----------
-        AW_new: complex vector
+        AW_new : complex vector
             New electric field values. """
         self.set_AW( FFT_t(AT_new ))
 
