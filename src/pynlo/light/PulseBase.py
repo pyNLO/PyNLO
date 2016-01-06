@@ -71,18 +71,18 @@ class Pulse:
     _not_ready_msg = 'Pulse class is not yet ready -- set center wavelength, time window, and npts.'    
     ####### Private properties    #############################################
     def __get_w0(self):
-        """ Return center angular frequency (THz) """
+        r""" Return center angular frequency (THz) """
         if self._centerfrequency is None:
             raise exceptions.ValueError('Center frequency is not set.')
         return 2.0 * np.pi * self._centerfrequency    
     def __get_W(self):
-        """ Return angular frequency grid (THz) """
+        r""" Return angular frequency grid (THz) """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
         else:
             return self._V + self._w0
     def __get_T(self):
-        """ Return temporal grid (ps) """
+        r""" Return temporal grid (ps) """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
         else:
@@ -91,14 +91,14 @@ class Pulse:
                                   self._n, endpoint = False) # time grid
             return TGRID
     def __get_dT(self):
-        """ Return time grid spacing (ps) """
+        r""" Return time grid spacing (ps) """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
         else:
             return self._time_window / np.double(self._n)
 
     def __get_V(self):
-        """ Return relative angular frequency grid (THz) """
+        r""" Return relative angular frequency grid (THz) """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
         else:
@@ -142,7 +142,6 @@ class Pulse:
         return self._n
     def _get_hash(self):
         return str(self._centerfrequency)+str(self.NPTS)    
-    ####### Time                  #############################################            
     def _get_W_Hz(self):
         if (self._cache_W_Hz_hash == self.cache_hash):
             return self._cache_W_Hz
@@ -183,8 +182,6 @@ class Pulse:
             return None
         else:
             return self._frep_MHz * 1.0e6
-
-    ####### ELectrtic Field       #############################################            
     def _get_AW(self):
         if self._AW is not None:
             return self._AW.copy()
@@ -194,9 +191,11 @@ class Pulse:
         return IFFT_t( self._AW.copy() )
 
     def set_AW(self, AW_new):
-        """ Set the value of the frequency-domain electric field.
-        :param AW_new: New electric field values.
-        :type wl: complex vector """
+        r""" Set the value of the frequency-domain electric field.
+        Parameters
+        ----------
+        AW_new: complex vector
+            New electric field values. """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
         if self._AW is None:
@@ -204,9 +203,11 @@ class Pulse:
         self._AW[:] = AW_new
         
     def set_AT(self, AT_new):
-        """ Set the value of the time-domain electric field.
-        :param AW_new: New electric field values.
-        :type wl: complex vector """
+        r""" Set the value of the time-domain electric field.
+        Parameters
+        ----------
+        AW_new: complex vector
+            New electric field values. """
         self.set_AW( FFT_t(AT_new ))
 
     # To keep this class' working isolated from accessors, all data reading and
@@ -267,14 +268,18 @@ class Pulse:
 
     ####### Core public  functions     ########################################        
     def set_center_wavelength_nm(self, wl):
-        """ Set the center wavelength of the grid in units of nanometers.
-        :param wl: New center wavelength (nm)
-        :type wl: scalar """
+        r""" Set the center wavelength of the grid in units of nanometers.
+        Parameters
+        ----------
+        wl: scalar
+             New center wavelength (nm)"""
         self._set_centerfrequency(self._c_nmps / wl)
     def set_center_wavelength_m(self, wl):
-        """ Set the center wavelength of the grid in units of meters.
-        :param wl: New center wavelength (m)
-        :type wl: scalar """        
+        r""" Set the center wavelength of the grid in units of meters.
+        Parameters
+        ----------
+        wl: scalar
+             New center wavelength (m)"""
         self._set_centerfrequency(self._c_nmps /  (wl * 1e9) )
     def set_NPTS(self, NPTS):
         self._n = int(NPTS)

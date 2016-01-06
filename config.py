@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sys, os
-extensions = []
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon']
 templates_path = ['/home/docs/checkouts/readthedocs.org/readthedocs/templates/sphinx', 'templates', '_templates', '.templates']
 source_suffix = '.rst'
 master_doc = 'index'
