@@ -444,7 +444,7 @@ class Pulse:
         return 1.0e9 * self._c_mks / self.calculate_weighted_avg_frequency_mks()
     def calculate_intensity_autocorrelation(self):  
         """ Calculates and returns the intensity autocorrelation,  
-        :math:`\int P(t)P(t+\tau) dt` """  
+        :math:`\int P(t)P(t+{\tau}) dt` """  
         return np.correlate(abs(self.AT)**2, abs(self.AT), mode='same')  
     def write_frog(self,
                  fileloc = 'broadened_er_pulse.dat', # default EDFA spectrum
