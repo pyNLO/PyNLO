@@ -1,5 +1,4 @@
 Pulse Class
 -----------
-.. automodule:: pynlo.light.PulseBase
+.. autoclass:: pynlo.light.PulseBase.Pulse
 	:autoattribute:
-	:members:
