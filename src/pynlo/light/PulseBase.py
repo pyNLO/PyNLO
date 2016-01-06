@@ -194,6 +194,9 @@ class Pulse:
         return IFFT_t( self._AW.copy() )
 
     def set_AW(self, AW_new):
+        """ Set the value of the frequency-domain electric field.
+        :param AW_new: New electric field values.
+        :type wl: complex vector """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
         if self._AW is None:
@@ -201,12 +204,16 @@ class Pulse:
         self._AW[:] = AW_new
         
     def set_AT(self, AT_new):
+        """ Set the value of the time-domain electric field.
+        :param AW_new: New electric field values.
+        :type wl: complex vector """
         self.set_AW( FFT_t(AT_new ))
 
     # To keep this class' working isolated from accessors, all data reading and
     # writing is done via methods. These are:
 
     wl_nm           = property(_get_wavelength_nm) # Returns wavelength grid in nanometers
+    # Returns angular frequency grid in THz
     W_THz           = property(_get_W_THz)
     dT_ps           = property(_get_dT_picoseconds)
     T_ps            = property(_get_T_picoseconds)
