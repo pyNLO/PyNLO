@@ -260,8 +260,14 @@ class Pulse:
 
     ####### Core public  functions     ########################################        
     def set_center_wavelength_nm(self, wl):
+        """ Set the center wavelength of the grid in units of nanometers.
+        :param wl: New center wavelength (nm)
+        :type wl: scalar """
         self._set_centerfrequency(self._c_nmps / wl)
     def set_center_wavelength_m(self, wl):
+        """ Set the center wavelength of the grid in units of meters.
+        :param wl: New center wavelength (m)
+        :type wl: scalar """        
         self._set_centerfrequency(self._c_nmps /  (wl * 1e9) )
     def set_NPTS(self, NPTS):
         self._n = int(NPTS)
