@@ -31,6 +31,7 @@ sys.path.insert(0, os.path.abspath(os.path.join('.', 'PyNLO_Root')))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+	'sphinx.ext.napoleon',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
