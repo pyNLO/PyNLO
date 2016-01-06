@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 04 13:48:11 2015
-This file is part of pyNLO.
-
-    pyNLO is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    pyNLO is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
-@author: ycasg
-"""
+#Created on Thu Jun 04 13:48:11 2015
+#This file is part of pyNLO.
+#
+#    pyNLO is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    pyNLO is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -74,15 +71,18 @@ class Pulse:
     _not_ready_msg = 'Pulse class is not yet ready -- set center wavelength, time window, and npts.'    
     ####### Private properties    #############################################
     def __get_w0(self):
+        """ Return center angular frequency (THz) """
         if self._centerfrequency is None:
             raise exceptions.ValueError('Center frequency is not set.')
         return 2.0 * np.pi * self._centerfrequency    
     def __get_W(self):
+        """ Return angular frequency grid (THz) """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
         else:
             return self._V + self._w0
     def __get_T(self):
+        """ Return temporal grid (ps) """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
         else:
@@ -91,12 +91,14 @@ class Pulse:
                                   self._n, endpoint = False) # time grid
             return TGRID
     def __get_dT(self):
+        """ Return time grid spacing (ps) """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
         else:
             return self._time_window / np.double(self._n)
 
     def __get_V(self):
+        """ Return relative angular frequency grid (THz) """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
         else:
@@ -204,7 +206,7 @@ class Pulse:
     # To keep this class' working isolated from accessors, all data reading and
     # writing is done via methods. These are:
 
-    wl_nm           = property(_get_wavelength_nm)
+    wl_nm           = property(_get_wavelength_nm) # Returns wavelength grid in nanometers
     W_THz           = property(_get_W_THz)
     dT_ps           = property(_get_dT_picoseconds)
     T_ps            = property(_get_T_picoseconds)
