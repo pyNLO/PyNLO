@@ -192,6 +192,7 @@ class Pulse:
 
     def set_AW(self, AW_new):
         r""" Set the value of the frequency-domain electric field.
+        
         Parameters
         ----------
         AW_new : complex vector
@@ -204,6 +205,7 @@ class Pulse:
         
     def set_AT(self, AT_new):
         r""" Set the value of the time-domain electric field.
+        
         Parameters
         ----------
         AW_new : complex vector
@@ -269,16 +271,18 @@ class Pulse:
     ####### Core public  functions     ########################################        
     def set_center_wavelength_nm(self, wl):
         r""" Set the center wavelength of the grid in units of nanometers.
+        
         Parameters
         ----------
-        wl: scalar
+        wl : scalar
              New center wavelength (nm)"""
         self._set_centerfrequency(self._c_nmps / wl)
     def set_center_wavelength_m(self, wl):
         r""" Set the center wavelength of the grid in units of meters.
+        
         Parameters
         ----------
-        wl: scalar
+        wl : scalar
              New center wavelength (m)"""
         self._set_centerfrequency(self._c_nmps /  (wl * 1e9) )
     def set_NPTS(self, NPTS):
@@ -357,7 +361,12 @@ class Pulse:
     ####### Auxiliary public  functions     ###################################
     def calc_epp(self):
         ''' Calculate and return energy per pulse via numerical integration
-            of A^2 dt'''
+            of :math:`A^2 dt`
+            
+            Returns
+            -------
+            Pulse energy (J)
+            '''
         return self.dT_mks * np.trapz(abs(self.AT)**2)
         
     def chirp_pulse_W(self, GDD, TOD, FOD = 0.0, w0_THz = None):
