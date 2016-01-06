@@ -195,7 +195,7 @@ class Pulse:
         
         Parameters
         ----------
-        AW_new : complex vector
+        AW_new : array_like
             New electric field values. 
         
         """
@@ -210,7 +210,7 @@ class Pulse:
         
         Parameters
         ----------
-        AW_new : complex vector
+        AW_new : array_like
             New electric field values.
             
         """
@@ -278,7 +278,7 @@ class Pulse:
         
         Parameters
         ----------
-        wl : scalar
+        wl : float
              New center wavelength (nm)
         
         """
@@ -288,7 +288,7 @@ class Pulse:
         
         Parameters
         ----------
-        wl : scalar
+        wl : float
              New center wavelength (m)
         
         """
@@ -373,7 +373,8 @@ class Pulse:
             
             Returns
             -------
-            Pulse energy (J)
+            x : float
+                Pulse energy (J)
             
             """
         return self.dT_mks * np.trapz(abs(self.AT)**2)
@@ -486,7 +487,7 @@ class Pulse:
         
         Returns
         -------
-        vector
+        x : ndarray, shape N_pts
             Intensity autocorrelation. The grid is the same as the pulse class'
             time grid.
             
