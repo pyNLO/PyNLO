@@ -196,7 +196,9 @@ class Pulse:
         Parameters
         ----------
         AW_new : complex vector
-            New electric field values. """
+            New electric field values. 
+        
+        """
         if not self._ready:
             raise exceptions.RuntimeError(self._not_ready_msg)
         if self._AW is None:
@@ -209,7 +211,9 @@ class Pulse:
         Parameters
         ----------
         AW_new : complex vector
-            New electric field values. """
+            New electric field values.
+            
+        """
         self.set_AW( FFT_t(AT_new ))
 
     # To keep this class' working isolated from accessors, all data reading and
@@ -275,7 +279,9 @@ class Pulse:
         Parameters
         ----------
         wl : scalar
-             New center wavelength (nm)"""
+             New center wavelength (nm)
+        
+        """
         self._set_centerfrequency(self._c_nmps / wl)
     def set_center_wavelength_m(self, wl):
         r""" Set the center wavelength of the grid in units of meters.
@@ -283,7 +289,9 @@ class Pulse:
         Parameters
         ----------
         wl : scalar
-             New center wavelength (m)"""
+             New center wavelength (m)
+        
+        """
         self._set_centerfrequency(self._c_nmps /  (wl * 1e9) )
     def set_NPTS(self, NPTS):
         self._n = int(NPTS)
@@ -360,13 +368,14 @@ class Pulse:
 
     ####### Auxiliary public  functions     ###################################
     def calc_epp(self):
-        ''' Calculate and return energy per pulse via numerical integration
+        r""" Calculate and return energy per pulse via numerical integration
             of :math:`A^2 dt`
             
             Returns
             -------
             Pulse energy (J)
-            '''
+            
+            """
         return self.dT_mks * np.trapz(abs(self.AT)**2)
         
     def chirp_pulse_W(self, GDD, TOD, FOD = 0.0, w0_THz = None):
@@ -473,7 +482,15 @@ class Pulse:
         return 1.0e9 * self._c_mks / self.calculate_weighted_avg_frequency_mks()
     def calculate_intensity_autocorrelation(self):  
         r""" Calculates and returns the intensity autocorrelation,  
-        :math:`\int P(t)P(t+\tau) dt` """  
+        :math:`\int P(t)P(t+\tau) dt` 
+        
+        Returns
+        -------
+        vector
+            Intensity autocorrelation. The grid is the same as the pulse class'
+            time grid.
+            
+        """  
         return np.correlate(abs(self.AT)**2, abs(self.AT), mode='same')  
     def write_frog(self,
                  fileloc = 'broadened_er_pulse.dat', # default EDFA spectrum
