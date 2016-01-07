@@ -1,5 +1,5 @@
 Pulse Class
 -----------
-.. autoclass:: pynlo.light.PulseBase.Pulse
+.. autoclass:: pynlo.light.Pulse
 	:members:
 	:show-inheritance:
