@@ -220,44 +220,215 @@ class Pulse:
     # writing is done via methods. These are:
 
     wl_nm           = property(_get_wavelength_nm)
-    """ Wavelength grid [nm] """
+    """ Property: Wavelength grid
+        
+    Returns
+    -------
+    wl_nm : ndarray, shape NPTS
+        Wavelength grid corresponding to AW [nm]
+    """
+
+
     W_THz           = property(_get_W_THz)
-    """ Angular frequency grid [THz] """
+    """ Property: angular frequency grid 
+        
+    Returns
+    -------
+    W_THz : ndarray, shape NPTS
+        Angular frequency grid corresponding to AW [THz]
+    """
+
     dT_ps           = property(_get_dT_picoseconds)
-    """ Time grid spacing [ps] """
+    """    
+    Property: time grid spacing
+    
+    Returns
+    -------
+    dT_ps : float
+        Time grid spacing [ps]
+    """    
+    
     T_ps            = property(_get_T_picoseconds)
     """    
+    Property: time grid
+    
     Returns
     -------
     T_ps : ndarray, shape NPTS
-        Time grid [ps]
-    """        
+        Time grid corresponding to AT [ps]
+    """
+    
     V_THz           = property(_get_V_THz)
-    """ Relative angular frequency [THz] """    
+    """    
+    Property: relative angular frequency grid
+    
+    Returns
+    -------
+    V_THz : ndarray, shape NPTS
+        Relative angular frequency grid corresponding to AW [THz]
+    """
+    
     time_window_ps  = property(_get_time_window_picoseconds)
-    """ Time grid spacing [ps] """
+    """    
+    Property: time grid span
+    
+    Returns
+    -------
+    time_window_ps : float
+        Time grid span [ps]
+    """    
+    
     center_wavelength_nm    = property(_get_center_wavelength_nm)
+    """    
+    Property: center wavelength
+    
+    Returns
+    -------
+    center_wavelength_nm : float
+        Wavelength of center point in AW grid [nm]
+    """        
     center_frequency_THz = property(_get_center_frequency_THz)
+    """    
+    Property: center frequency
+    
+    Returns
+    -------
+    center_frequency_THz : float
+        Frequency of center point in AW grid [THz]
+    """        
     
     wl_mks          = property(_get_wavelength_m)
-    W_mks           = property(_get_W_Hz)      
+    """ Property: Wavelength grid
+        
+    Returns
+    -------
+    wl_mks : ndarray, shape NPTS
+        Wavelength grid corresponding to AW [m]
+    """    
+    W_mks           = property(_get_W_Hz)
+    """ Property: angular frequency grid 
+        
+    Returns
+    -------
+    W_mks : ndarray, shape NPTS
+        Angular frequency grid corresponding to AW [Hz]
+    """    
     dT_mks          = property(_get_dT_seconds)
+    """    
+    Property: time grid spacing
+    
+    Returns
+    -------
+    dT_mks : float
+        Time grid spacing [s]
+    """    
+    
     T_mks           = property(_get_T_seconds)
+    """    
+    Property: time grid
+    
+    Returns
+    -------
+    T_mks : ndarray, shape NPTS
+        Time grid corresponding to AT [s]
+    """
+    
     V_mks           = property(_get_V_Hz)
-    dF_mks           = property(_get_dF_Hz)    
+    """    
+    Property: relative angular frequency grid
+    
+    Returns
+    -------
+    V_mks : ndarray, shape NPTS
+        Relative angular frequency grid corresponding to AW [Hz]
+    """    
+    dF_mks           = property(_get_dF_Hz) 
+    """    
+    Property: frequency grid spacing
+    
+    Returns
+    -------
+    dF_mks : float
+        Frequency grid spacing [s]
+    """     
     dF_THz           = property(_get_dF_THz)
+    """    
+    Property: frequency grid spacing
+    
+    Returns
+    -------
+    dF_ps : float
+        Frequency grid spacing [ps]
+    """     
     
     time_window_mks = property(_get_time_window_seconds)
-    center_wavelength_mks   = property(_get_center_wavelength_mks)
-    center_frequency_mks = property(_get_center_frequency_mks)
+    """    
+    Property: time grid span
     
+    Returns
+    -------
+    time_window_mks : float
+        Time grid span [ps]
+    """    
+    
+    center_wavelength_mks   = property(_get_center_wavelength_mks)
+    """    
+    Property: center wavelength
+    
+    Returns
+    -------
+    center_wavelength_mks : float
+        Wavelength of center point in AW grid [m]
+    """            
+    
+    center_frequency_mks = property(_get_center_frequency_mks)
+    """    
+    Property: center frequency
+    
+    Returns
+    -------
+    center_frequency_mks : float
+        Frequency of center point in AW grid [Hz]
+    """            
     
     AW              = property(_get_AW)
+    """    
+    Property: frequency-domain electric field grid
+    
+    Returns
+    -------
+    AW : ndarray, shape NPTS
+        Complex electric field in frequency domain.
+    """
+    
     AT              = property(_get_AT)
+    """    
+    Property: time-domain electric field grid
+    
+    Returns
+    -------
+    AT : ndarray, shape NPTS
+        Complex electric field in time domain.
+    """
     NPTS            = property(_get_NPTS)  
     frep_MHz        = property(_get_frep_MHz)
-    frep_Hz         = property(_get_frep_Hz)
-
+    """    
+    Property: Repetition rate. Used for calculating average beam power.
+    
+    Returns
+    -------
+    frep_MHz : float
+        Pulse repetition frequency [MHz]
+    """                
+    frep_mks         = property(_get_frep_Hz)
+    """    
+    Property: Repetition rate. Used for calculating average beam power.
+    
+    Returns
+    -------
+    frep_mks : float
+        Pulse repetition frequency [Hz]
+    """                
     cache_hash      = property(_get_hash)
     
     def _set_centerfrequency(self, f_THz):
