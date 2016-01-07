@@ -220,13 +220,22 @@ class Pulse:
     # writing is done via methods. These are:
 
     wl_nm           = property(_get_wavelength_nm)
-    """ Returns wavelength grid in nanometers """
-    # Returns angular frequency grid in THz
+    """ Wavelength grid [nm] """
     W_THz           = property(_get_W_THz)
+    """ Angular frequency grid [THz] """
     dT_ps           = property(_get_dT_picoseconds)
+    """ Time grid spacing [ps] """
     T_ps            = property(_get_T_picoseconds)
+    """    
+    Returns
+    -------
+    T_ps : ndarray, shape NPTS
+        Time grid [ps]
+    """        
     V_THz           = property(_get_V_THz)
+    """ Relative angular frequency [THz] """    
     time_window_ps  = property(_get_time_window_picoseconds)
+    """ Time grid spacing [ps] """
     center_wavelength_nm    = property(_get_center_wavelength_nm)
     center_frequency_THz = property(_get_center_frequency_THz)
     
@@ -280,7 +289,7 @@ class Pulse:
         Parameters
         ----------
         wl : float
-             New center wavelength (nm)
+             New center wavelength [nm]
         
         """
         self._set_centerfrequency(self._c_nmps / wl)
@@ -290,22 +299,59 @@ class Pulse:
         Parameters
         ----------
         wl : float
-             New center wavelength (m)
+             New center wavelength [m]
         
         """
-        self._set_centerfrequency(self._c_nmps /  (wl * 1e9) )
+        self._set_centerfrequency(self._c_nmps /  (wl * 1.0e9) )
+        
     def set_NPTS(self, NPTS):
+        r""" Set the grid size. The actual grid arrays are *not* altered
+            automatically to reflect a change.
+        
+        Parameters
+        ----------
+        NPTS : int
+             Number of points in grid
+        
+        """        
         self._n = int(NPTS)
         self._check_ready() 
     def set_frep_MHz(self, fr_MHz):
+        r""" Set the pulse repetition frequency. This is used to convert between
+            pulse energy and average power.
+        
+        Parameters
+        ----------
+        fr_MHz : float
+             New repetition frequency [MHz]
+        
+        """        
         self._frep_MHz = fr_MHz
     def set_time_window_ps(self, T):
+        r""" Set the total time window of the grid. This sets the grid dT, and
+            implicitly changes the frequency span (~1/dT).
+        
+        Parameters
+        ----------
+        T : float
+             New grid time span [ps]
+        
+        """                
         if self._n is None:
             raise exceptions.RuntimeError('Set number of points before setting time window.')
         # frequency grid is 2 pi/ dT * [-1/2, 1/2]
         # dT is simply time_window / NPTS
         self._set_time_window(T)
     def set_time_window_s(self, T):
+        r""" Set the total time window of the grid. This sets the grid dT, and
+            implicitly changes the frequency span (~1/dT).
+        
+        Parameters
+        ----------
+        T : float
+             New grid time span [s]
+        
+        """                
         if self._n is None:
             raise exceptions.RuntimeError('Set number of points before setting time window.')        
         self._set_time_window(T * 1e12)
