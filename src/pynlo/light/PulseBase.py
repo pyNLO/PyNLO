@@ -219,7 +219,8 @@ class Pulse:
     # To keep this class' working isolated from accessors, all data reading and
     # writing is done via methods. These are:
 
-    wl_nm           = property(_get_wavelength_nm) # Returns wavelength grid in nanometers
+    wl_nm           = property(_get_wavelength_nm)
+    """ Returns wavelength grid in nanometers """
     # Returns angular frequency grid in THz
     W_THz           = property(_get_W_THz)
     dT_ps           = property(_get_dT_picoseconds)
