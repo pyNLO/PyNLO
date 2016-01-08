@@ -520,68 +520,80 @@ class Pulse:
         Parameters
         ----------
         T : float
-             New grid time span [s]
-        
+             New grid time span [s]        
         """                
         if self._n is None:
             raise exceptions.RuntimeError('Set number of points before setting time window.')        
         self._set_time_window(T * 1e12)
         
     def set_frequency_window_THz(self, DF):
+        r""" Set the total frequency window of the grid. This sets the grid dF, and
+            implicitly changes the temporal span (~1/dF).
+        
+        Parameters
+        ----------
+        DF : float
+             New grid time span [THz]
+        
+        """                
         if self._n is None:
             raise exceptions.RuntimeError('Set number of points before setting frequency window.')
         # Internally, the time window is used to determine the grids. Calculate
         # the time window size as  1 / dF = 1 / (DF / N)
         T = self._n / float(DF)
         self._set_time_window(T)
-    def set_frequency_window_Hz(self, DF):
+    def set_frequency_window_mks(self, DF):
+        r""" Set the total frequency window of the grid. This sets the grid dF, and
+            implicitly changes the temporal span (~1/dF).
+        
+        Parameters
+        ----------
+        DF : float
+             New grid time span [Hz]
+        
+        """                
         if self._n is None:
             raise exceptions.RuntimeError('Set number of points before setting frequency window.')
         # Internally, the time window is used to determine the grids. Calculate
         # the time window size as  1 / dF = 1 / (DF / N)
         T = self._n / float(DF)
-        self._set_time_window(T * 1e12)
-        
+        self._set_time_window(T * 1e12)            
 
-    
-    def set_units(self, external_units):
-        if external_units == 'nmps':
-            self.external_c = self._c_nmps
-            self._external_units = external_units                    
-        elif external_units == 'mks':
-            self.external_c = self._c_mks
-            self._external_units = external_units        
-        else:
-            exceptions.ValueError('Unit type ',external_units,' is not known. Valid values are nmps and mks.')    
-    
-
-
-        
-    def internal_time_from_ps(self, time, power = 1):        
-        """ Convert to internal units of ps"""
-        if self._ext_units_nmps():
-            return time
-        if self._ext_units_mks():
-            return time * (1e-12)**power
-    def internal_time_to_ps(self, time, power = 1):
-        """ Convert from internal units of ps to external time """
-        if self._ext_units_nmps():
-            return time
-        if self._ext_units_mks():
-            return time * (1e12)**power                    
-            
-    def internal_wl_from_nm(self, wl):
-        """ Convert to internal units of nm """
-        if self._ext_units_nmps():
-            return wl
-        if self._ext_units_mks():
-            return wl * 1e-9
-    def internal_wl_to_nm(self, wl):
-        """ Convert from internal units of nm to external units """
-        if self._ext_units_nmps():
-            return wl
-        if self._ext_units_mks():
-            return wl * 1e9
+# Depricated, to be removed:
+#    def set_units(self, external_units):
+#        if external_units == 'nmps':
+#            self.external_c = self._c_nmps
+#            self._external_units = external_units                    
+#        elif external_units == 'mks':
+#            self.external_c = self._c_mks
+#            self._external_units = external_units        
+#        else:
+#            exceptions.ValueError('Unit type ',external_units,' is not known. Valid values are nmps and mks.')            
+#    def internal_time_from_ps(self, time, power = 1):        
+#        """ Convert to internal units of ps"""
+#        if self._ext_units_nmps():
+#            return time
+#        if self._ext_units_mks():
+#            return time * (1e-12)**power
+#    def internal_time_to_ps(self, time, power = 1):
+#        """ Convert from internal units of ps to external time """
+#        if self._ext_units_nmps():
+#            return time
+#        if self._ext_units_mks():
+#            return time * (1e12)**power                    
+#            
+#    def internal_wl_from_nm(self, wl):
+#        """ Convert to internal units of nm """
+#        if self._ext_units_nmps():
+#            return wl
+#        if self._ext_units_mks():
+#            return wl * 1e-9
+#    def internal_wl_to_nm(self, wl):
+#        """ Convert from internal units of nm to external units """
+#        if self._ext_units_nmps():
+#            return wl
+#        if self._ext_units_mks():
+#            return wl * 1e9
                 
 
     ####### Auxiliary public  functions     ###################################
@@ -592,13 +604,33 @@ class Pulse:
             Returns
             -------
             x : float
-                Pulse energy (J)
-            
+                Pulse energy [J]
             """
         return self.dT_mks * np.trapz(abs(self.AT)**2)
         
     def chirp_pulse_W(self, GDD, TOD, FOD = 0.0, w0_THz = None):
-        ''' Add GDD and TOD to the pulse.'''
+        r""" Alter the phase of the pulse with :math:`\beta_2, \beta_3, \beta_4'
+        expanded around frequency :math:`\omega_0`.
+        
+        Parameters
+        ----------
+        GDD : float
+             Group delay dispersion (:math:`beta_2`) [ps^2]
+        TOD : float
+             Group delay dispersion (:math:`beta_3`) [ps^3]
+        FOD : float
+             Group delay dispersion (:math:`beta_4`) [ps^4]             
+        
+        Notes
+        -----
+        The convention used for dispersion is
+        .. math::
+           E_{new} (\omega) = \exp\left(i \left( \frac{1}{2} GDD \omega^2 +
+                                            \frac{1}{6} TOD \omega^3 +
+                                            \frac{1}{24} FOD \omega^4 \right)\right)
+                                            E(\omega)
+        """                
+
         if w0_THz is None:
             self.set_AW( np.exp(1j * (GDD / 2.0) * self.V_THz**2 + 
                                    1j * (TOD / 6.0) * self.V_THz**3+ 
