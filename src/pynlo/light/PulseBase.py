@@ -609,7 +609,7 @@ class Pulse:
         return self.dT_mks * np.trapz(abs(self.AT)**2)
         
     def chirp_pulse_W(self, GDD, TOD, FOD = 0.0, w0_THz = None):
-        r""" Alter the phase of the pulse with :math:`\beta_2, \beta_3, \beta_4'
+        r""" Alter the phase of the pulse with :math:`\beta_2, \beta_3, \beta_4`
         expanded around frequency :math:`\omega_0`.
         
         Parameters
