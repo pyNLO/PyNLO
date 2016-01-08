@@ -608,27 +608,29 @@ class Pulse:
             """
         return self.dT_mks * np.trapz(abs(self.AT)**2)
         
-    def chirp_pulse_W(self, GDD, TOD, FOD = 0.0, w0_THz = None):
+    def chirp_pulse_W(self, GDD, TOD=0, FOD = 0.0, w0_THz = None):
         r""" Alter the phase of the pulse with :math:`\beta_2, \beta_3, \beta_4`
         expanded around frequency :math:`\omega_0`.
         
         Parameters
         ----------
         GDD : float
-             Group delay dispersion (:math:`beta_2`) [ps^2]
-        TOD : float
-             Group delay dispersion (:math:`beta_3`) [ps^3]
-        FOD : float
-             Group delay dispersion (:math:`beta_4`) [ps^4]             
+             Group delay dispersion (:math:`\beta_2`) [ps^2]
+        TOD : float, optional
+             Group delay dispersion (:math:`\beta_3`) [ps^3], defaults to 0.
+        FOD : float, optional
+             Group delay dispersion (:math:`\beta_4`) [ps^4], defaults to 0.             
+        w0_THz : float, optional
+             Center frequency of dispersion expansion, defaults to grid center frequency.
         
         Notes
         -----
         The convention used for dispersion is
-        .. math::
+        :math:`
            E_{new} (\omega) = \exp\left(i \left( \frac{1}{2} GDD \omega^2 +
                                             \frac{1}{6} TOD \omega^3 +
                                             \frac{1}{24} FOD \omega^4 \right)\right)
-                                            E(\omega)
+                                            E(\omega)`
         """                
 
         if w0_THz is None:
