@@ -627,8 +627,11 @@ class Pulse:
         -----
         The convention used for dispersion is
         
-        .. math:: E_{new} (\omega) = \exp\left(i \left( \frac{1}{2} GDD\, \omega^2 + \frac{1}{6}\, TOD \omega^3 + \frac{1}{24} FOD\, \omega^4 \right)\right) 
-                                            E(\omega)
+        .. math:: E_{new} (\omega) = \exp\left(i \left(\\
+                                        \frac{1}{2} GDD\, \omega^2 +\\
+                                        \frac{1}{6}\, TOD \omega^3 +\\
+                                        \frac{1}{24} FOD\, \omega^4 \right)\right)\\
+                                        E(\omega)
                                             
         """                
 
