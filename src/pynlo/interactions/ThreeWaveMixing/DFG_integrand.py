@@ -16,11 +16,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
 #@author: Dan Maser, Gabe Ycas
-"""
-This class defines the integrand for a DFG or OPO parametric inteaction.
-Following Eqn (8) in Seres & Hebling, "Nonstationary theory of synchronously pumped femtosecond optical parametric oscillators", JOSA B Vol 17 No 5, 2000. 
 
-"""
 
 import numpy as np
 import scipy.fftpack as fftpack
@@ -34,6 +30,11 @@ from matplotlib import pyplot as plt
 
 
 class dfg_problem:     
+    """
+    This class defines the integrand for a DFG or OPO parametric inteaction.
+    Following Eqn (8) in Seres & Hebling, "Nonstationary theory of synchronously pumped femtosecond optical parametric oscillators", JOSA B Vol 17 No 5, 2000. 
+    
+    """
     last_calc_z = -1e6
     overlap_pump = None
     overlap_sgnl = None
