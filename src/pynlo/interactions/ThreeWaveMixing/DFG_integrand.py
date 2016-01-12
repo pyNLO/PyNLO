@@ -1,21 +1,25 @@
 # -*- coding: utf-8 -*-
+#
+#Created on Wed Dec 11 09:25:25 2013
+#This file is part of pyNLO.
+#
+#    pyNLO is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    pyNLO is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
+#@author: Dan Maser, Gabe Ycas
 """
-Created on Wed Dec 11 09:25:25 2013
-This file is part of pyNLO.
+This class defines the integrand for a DFG or OPO parametric inteaction.
+Following Eqn (8) in Seres & Hebling, "Nonstationary theory of synchronously pumped femtosecond optical parametric oscillators", JOSA B Vol 17 No 5, 2000. 
 
-    pyNLO is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    pyNLO is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
-@author: Dan
 """
 
 import numpy as np
@@ -148,10 +152,17 @@ class dfg_problem:
     
      
     def gen_jl(self, y):
-        """ Following Eqn (8) in 
-            Seres & Hebling, "Nonstationary theory of synchronously 
-            pumped femtosecond optical parametric oscillators", 
-            JOSA B Vol 17 No 5, 2000. """
+        """ Following Eqn (8) in Seres & Hebling, "Nonstationary theory of 
+            synchronously pumped femtosecond optical parametric oscillators", 
+            JOSA B Vol 17 No 5, 2000. A call to this function updates the 
+            :math: `\chi_3` mixing terms used for four-wave mixing.
+            
+            Parameters
+            ----------
+            y : array-like, shape is 3 * NPTS
+                Concatenated pump, signal, and idler fields
+            
+            """
         n_p  = self.n_p
         n_s  = self.n_s
         n_i  = self.n_i
@@ -184,9 +195,16 @@ class dfg_problem:
         
         [self.jl_p, self.jl_s, self.jl_i] = jl  
         
-        return 1
     
     def poling(self, x):
+        """ Helper function to get sign of :math: `d_\textrm{eff}` at position
+            :math: `x` in the crystal. Uses self.crystal's pp function.
+            
+            Returns
+            -------
+            x : int
+                Sign (+1 or -1) of :math: `d_\textrm{eff}`.
+            """
         return np.sign(np.sin(2. * np.pi * x / self.crystal.pp(x)))
 
     def Ap(self, y):
