@@ -1,5 +1,5 @@
-Pulse Class
+DFG Integrand
 -----------
-.. autoclass:: pynlo.interactions.ThreeWaveMixing.DFG_integrand
+.. automodule:: pynlo.interactions.ThreeWaveMixing.DFG_integrand
 	:members:
 	:show-inheritance:
