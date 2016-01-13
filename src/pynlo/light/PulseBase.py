@@ -27,20 +27,13 @@ class Pulse:
        is a base upon which various cases are built (eg analytic pulses,
        CW fields, or pulses generated from experimental data.) """
 
-    def __init__(self, frep_MHz = None, n = None, external_units = None):
+    def __init__(self, frep_MHz = None, n = None):
         if frep_MHz is not None:
             self._frep_MHz = frep_MHz
             if frep_MHz > 1.0e6:
                 warnings.warn("frep should be specified in MHz; large value given.")
         if n is not None:
-            self.set_NPTS(n)
-            
-        if external_units is not None:
-            if (external_units == 'mks' or external_units == 'nmps'):
-                self.set_units(external_units)        
-            else:
-                raise exceptions.ValueError('External units must be mks or nmps')
-
+            self.set_NPTS(n)            
         
     # Private variables:
     # This set is the minimum number required to completely specify the light

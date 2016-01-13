@@ -21,10 +21,17 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 from numpy.fft import fftshift, ifftshift
-import pyfftw
 from pynlo.interactions.FourWaveMixing import global_variables
 from pynlo.light.PulseBase import Pulse
 import gc
+
+
+try:
+    import pyfftw
+    PYFFTW_AVAILABLE=True
+except:
+    PYFFTW_AVAILABLE=False
+
 
 class SSFM:
     METHOD_SSFM,METHOD_RK4IP = range(2)    
@@ -65,49 +72,103 @@ class SSFM:
         
         self.n = pulse_in.NPTS
         
-        self.fft_input    = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.fft_output   = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.ifft_input   = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.ifft_output  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-
-        self.fft_input_2  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.fft_output_2 = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.ifft_input_2 = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.ifft_output_2= pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-
-        
-        self.A_I    = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.A_I[:] = 0.0
-        self.A2     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.A2[:]  = 0.0
-        self.exp_D  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.k1     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.k2     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.k3     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.k4     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.temp   = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')          
-        self.Aw     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')              
-        self.A2w    = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.dA     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.dA2    = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.R_A2   = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.dR_A2  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        self.omegas = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')     
-        self.omegas[:] = 0.0
-        self.alpha  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')                
-        self.alpha[:] = 0.0
-        self.betas  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')                
-        self.betas[:] = 0.0
-        self.LinearStep_output    = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
-        
-        self.A      = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')
-        self.A[:] = 0.0
-        self.R      = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')
-        self.R[:] = 0.0
-        self.R0     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')       
-        self.R0[:] = 0.0
-        self.Af     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')
-        self.Ac     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')        
+        if PYFFTW_AVAILABLE:
+            self.fft_input    = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.fft_output   = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.ifft_input   = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.ifft_output  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+    
+            self.fft_input_2  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.fft_output_2 = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.ifft_input_2 = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.ifft_output_2= pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+    
+            
+            self.A_I    = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.A_I[:] = 0.0
+            self.A2     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.A2[:]  = 0.0
+            self.exp_D  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.k1     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.k2     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.k3     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.k4     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.temp   = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')          
+            self.Aw     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')              
+            self.A2w    = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.dA     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.dA2    = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.R_A2   = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.dR_A2  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            self.omegas = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')     
+            self.omegas[:] = 0.0
+            self.alpha  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')                
+            self.alpha[:] = 0.0
+            self.betas  = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')                
+            self.betas[:] = 0.0
+            self.LinearStep_output    = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')      
+            
+            self.A      = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')
+            self.A[:] = 0.0
+            self.R      = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')
+            self.R[:] = 0.0
+            self.R0     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')       
+            self.R0[:] = 0.0
+            self.Af     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')
+            self.Ac     = pyfftw.n_byte_align_empty((self.n), 16, dtype='complex128')        
+            
+            # To be double sure that there are no problems, also make 2 copies of
+            # the FFT objects. This lets us nest ifft_2 around a function using ifft
+            # without worrying about potential problems.
+            self.fft = pyfftw.FFTW(self.fft_input,self.fft_output,direction='FFTW_FORWARD')
+            self.fft_2 = pyfftw.FFTW(self.fft_input_2,self.fft_output_2,direction='FFTW_FORWARD')
+            
+            self.ifft = pyfftw.FFTW(self.ifft_input,self.ifft_output,direction='FFTW_BACKWARD')
+            self.ifft_2 = pyfftw.FFTW(self.ifft_input_2,self.ifft_output_2,direction='FFTW_BACKWARD')
+        else:
+            self.fft_input    = np.ndarray((self.n,), dtype='complex128')      
+            self.fft_output   = np.ndarray((self.n,), dtype='complex128')      
+            self.ifft_input   = np.ndarray((self.n,), dtype='complex128')      
+            self.ifft_output  = np.ndarray((self.n,), dtype='complex128')      
+    
+            self.fft_input_2  = np.ndarray((self.n,), dtype='complex128')      
+            self.fft_output_2 = np.ndarray((self.n,), dtype='complex128')      
+            self.ifft_input_2 = np.ndarray((self.n,), dtype='complex128')      
+            self.ifft_output_2= np.ndarray((self.n,), dtype='complex128')      
+    
+            
+            self.A_I    = np.ndarray((self.n,), dtype='complex128')      
+            self.A_I[:] = 0.0
+            self.A2     = np.ndarray((self.n,), dtype='complex128')      
+            self.A2[:]  = 0.0
+            self.exp_D  = np.ndarray((self.n,), dtype='complex128')      
+            self.k1     = np.ndarray((self.n,), dtype='complex128')      
+            self.k2     = np.ndarray((self.n,), dtype='complex128')      
+            self.k3     = np.ndarray((self.n,), dtype='complex128')      
+            self.k4     = np.ndarray((self.n,), dtype='complex128')      
+            self.temp   = np.ndarray((self.n,), dtype='complex128')      
+            self.Aw     = np.ndarray((self.n,), dtype='complex128')      
+            self.A2w    = np.ndarray((self.n,), dtype='complex128')      
+            self.dA     = np.ndarray((self.n,), dtype='complex128')      
+            self.dA2    = np.ndarray((self.n,), dtype='complex128')      
+            self.R_A2   = np.ndarray((self.n,), dtype='complex128')      
+            self.dR_A2  = np.ndarray((self.n,), dtype='complex128')      
+            self.omegas = np.ndarray((self.n,), dtype='complex128')      
+            self.omegas[:] = 0.0
+            self.alpha  = np.ndarray((self.n,), dtype='complex128')      
+            self.alpha[:] = 0.0
+            self.betas  = np.ndarray((self.n,), dtype='complex128')      
+            self.betas[:] = 0.0
+            self.LinearStep_output    = np.ndarray((self.n,), dtype='complex128')      
+            
+            self.A      = np.ndarray((self.n,), dtype='complex128')      
+            self.A[:] = 0.0
+            self.R      = np.ndarray((self.n,), dtype='complex128')      
+            self.R[:] = 0.0
+            self.R0     = np.ndarray((self.n,), dtype='complex128')      
+            self.R0[:] = 0.0
+            self.Af     = np.ndarray((self.n,), dtype='complex128')      
+            self.Ac     = np.ndarray((self.n,), dtype='complex128')      
         self.Af[:] = 0.0
         self.Ac[:] = 0.0
 
@@ -117,18 +178,7 @@ class SSFM:
         self.gamma          = fiber.gamma
         self.w0             = pulse_in.center_frequency_THz * 2.0 * np.pi
 
-        self.last_h = None
-        
-
-
-        # To be double sure that there are no problems, also make 2 copies of
-        # the FFT objects. This lets us nest ifft_2 around a function using ifft
-        # without worrying about potential problems.
-        self.fft = pyfftw.FFTW(self.fft_input,self.fft_output,direction='FFTW_FORWARD')
-        self.fft_2 = pyfftw.FFTW(self.fft_input_2,self.fft_output_2,direction='FFTW_FORWARD')
-        
-        self.ifft = pyfftw.FFTW(self.ifft_input,self.ifft_output,direction='FFTW_BACKWARD')
-        self.ifft_2 = pyfftw.FFTW(self.ifft_input_2,self.ifft_output_2,direction='FFTW_BACKWARD')
+        self.last_h = None      
 
         if not self.disable_Raman:
             self.CalculateRamanResponseFT(pulse_in)

@@ -20,4 +20,5 @@ setup(name='pyNLO',
                 'pynlo.util',
                 'pynlo.util.ode_solve'],
       package_dir = {'pynlo': 'src/pynlo'},
+      package_data = {'pynlo': ['media/fibers/*.txt']},
      )
