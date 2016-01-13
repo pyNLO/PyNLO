@@ -25,7 +25,7 @@ import exceptions
 from pynlo.light.PulseBase import Pulse
 
 class SechPulse(Pulse):
-    def __init__(self, power, T0, center_wavelength_nm,
+    def __init__(self, power, T0_ps, center_wavelength_nm,
                  time_window = 10., frep_MHz = 100., NPTS = 2**10, 
                  GDD = 0, TOD = 0, chirp2 = 0, chirp3 = 0,
                  power_is_avg = False):
@@ -33,16 +33,14 @@ class SechPulse(Pulse):
         centered at wavelength center_wavelength_nm (nm).
         time_window (ps) sets temporal grid size. Optional GDD and TOD are
         in ps^2 and ps^3."""
-        Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS, external_units = 'nmps')
+        Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS)
         # make sure we weren't passed mks units        
         assert (center_wavelength_nm > 1.0) 
         assert (time_window > 1.0 )                
         self.set_center_wavelength_nm(center_wavelength_nm)        
         self.set_time_window_ps(time_window)        
 
-        T0 = self.internal_time_from_ps(T0)
-        GDD = self.internal_time_from_ps(GDD, 2)    
-        TOD = self.internal_time_from_ps(TOD, 3) 
+        T0 = T0_ps
                 
         ### Generate pulse
         if not power_is_avg:
@@ -64,15 +62,13 @@ class GaussianPulse(Pulse):
             center_wavelength_nm (nm). time_window (ps) sets temporal grid
             size. Optional GDD and TOD are in ps^2 and ps^3."""
 
-        Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS, external_units = 'nmps')
+        Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS)
         # make sure we weren't passed mks units        
         assert (center_wavelength_nm > 1.0) 
         assert (time_window > 1.0 )        
         self.set_center_wavelength_nm(center_wavelength_nm)
         self.set_time_window_ps(time_window)        
         
-        GDD = self.internal_time_from_ps(GDD, 2)    
-        TOD = self.internal_time_from_ps(TOD, 3)             
                    
         self.set_AT( np.sqrt(power) * np.exp(-2.77*self.T_ps**2/(T0**2)) ) # input field (W^0.5) 
         if power_is_avg:            
@@ -95,7 +91,7 @@ class FROGPulse(Pulse):
         if power_is_epp is True  then the number is pulse energy [J] 
         if power_is_epp is False then the power is average power [W], and 
         is multiplied by frep to calculate pulse energy"""
-        Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS, external_units = 'nmps')
+        Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS)
         try:
             self.fileloc   = fileloc
             # make sure we weren't passed mks units
