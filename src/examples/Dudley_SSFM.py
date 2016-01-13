@@ -41,7 +41,7 @@ npoints = 2**13
 init = SechPulse(pump_power, pump_pulse_length, centerwl, time_window = 10.0,
                     GDD = 0, TOD = 0.0, NPTS = npoints, frep_MHz = 100, power_is_avg = False)
 
-fiber1 = fiber.FiberInstance()
+fiber1 = fiber.FiberInstance() 
 fiber1.load_from_db( fiber_length, 'dudley')
 
 evol = SSFM.SSFM(dz = 1e-6, local_error = 0.001, USE_SIMPLE_RAMAN = True)
