@@ -56,7 +56,7 @@ class FiberInstance:
         self.c_mks = constants.speed_of_light
         self.c = constants.speed_of_light * 1e9/1e12 # c in nm/ps
         self.is_simple_fiber = False
-        self.fiberloader = JSONFiberLoader.FiberLoader('nist_fibers')
+        self.fiberloader = JSONFiberLoader.JSONFiberLoader('nist_fibers')
     def load_from_db(self, length, fibertype, poly_order = 2):
         self.fibertype = fibertype
         self.fiberspecs = self.fiberloader.get_fiber(fibertype)

@@ -17,5 +17,3 @@
 #
 
 
-from pynlo.media import crystals
-from pynlo.media import fiber
