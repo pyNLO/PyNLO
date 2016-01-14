@@ -20,6 +20,3 @@
 #-----------------------------------------------------------------------
 # Evolution of the pulse through the material
 #-----------------------------------------------------------------------
-
-
-from pynlo.interactions import ThreeWaveMixing, FourWaveMixing
