@@ -18,25 +18,27 @@ This file is part of pyNLO.
 @author: dim1
 """
 
+# This script simulates supercontinuum generation in a silica fiber.
+# It basically reproduces Fig. 3 from 
+# Dudley, Gentry, and Cohen: Supercontinuum generation in photonic crystal fiber,
+# Rev. Mod. Phys., Vol. 78, No. 4, October-December 2006
 import numpy as np
 import matplotlib.pyplot as plt
 from pynlo.interactions.FourWaveMixing import SSFM
 from pynlo.media.fibers import fiber
 from pynlo.light.DerivedPulses import SechPulse
 
-#plt.close('all')
-
 dz = 1e-3
 steps = 100
 range1 = np.arange(steps)
 
 centerwl = 835.0
-fiber_length = 0.04
+fiber_length = 0.15
 
 pump_power = 1.0e4
 pump_pulse_length = 28.4e-3
-npoints = 2**13
 
+npoints = 2**13
 
 init = SechPulse(pump_power, pump_pulse_length, centerwl, time_window = 10.0,
                     GDD = 0, TOD = 0.0, NPTS = npoints, frep_MHz = 100, power_is_avg = False)
@@ -44,7 +46,7 @@ init = SechPulse(pump_power, pump_pulse_length, centerwl, time_window = 10.0,
 fiber1 = fiber.FiberInstance() 
 fiber1.load_from_db( fiber_length, 'dudley')
 
-evol = SSFM.SSFM(dz = 1e-6, local_error = 0.001, USE_SIMPLE_RAMAN = True)
+evol = SSFM.SSFM(dz = dz, local_error = 0.001, USE_SIMPLE_RAMAN = True)
 y = np.zeros(steps)
 AW = np.zeros((init.NPTS, steps))
 AT = np.copy(AW)
@@ -72,20 +74,20 @@ mlIT = np.max(zT)
 
 D = fiber1.Beta2_to_D(init)
 beta = fiber1.Beta2(init)
-#
-#plt.figure()
-#plt.subplot(121)
-#plt.plot(wl,D,'x')
-#plt.xlim(400,1600)
-#plt.ylim(-400,300)
-#plt.xlabel('Wavelength (nm)')
-#plt.ylabel('D (ps/nm/km)')
-#plt.subplot(122)
-#plt.plot(wl,beta*1000,'x')
-#plt.xlim(400,1600)
-#plt.ylim(-350,200)
-#plt.xlabel('Wavelength (nm)')
-#plt.ylabel(r'$\beta_2$ (ps$^2$/km)')
+
+plt.figure()
+plt.subplot(121)
+plt.plot(wl,D,'x')
+plt.xlim(400,1600)
+plt.ylim(-400,300)
+plt.xlabel('Wavelength (nm)')
+plt.ylabel('D (ps/nm/km)')
+plt.subplot(122)
+plt.plot(wl,beta*1000,'x')
+plt.xlim(400,1600)
+plt.ylim(-350,200)
+plt.xlabel('Wavelength (nm)')
+plt.ylabel(r'$\beta_2$ (ps$^2$/km)')
 
 plt.figure()
 plt.subplot(121)
