@@ -430,7 +430,7 @@ class SSFM:
         self.setup_fftw(pulse_in, fiber, output_power)
 
         for i in range(n_steps):                        
-            print "steps:", i, "totaldist:", fiber.length * (1 - np.float(i)/n_steps)
+            print "Step:", i, "Distance remaining:", fiber.length * (1 - np.float(i)/n_steps)
             self.integrate_over_dz(delta_z)            
             AW[:,i] = self.conditional_ifftshift(self.FFT_t_2(self.A))
             AT[:,i] = self.conditional_ifftshift(self.A)
