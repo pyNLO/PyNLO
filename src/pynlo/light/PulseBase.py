@@ -600,6 +600,21 @@ class Pulse:
                 Pulse energy [J]
             """
         return self.dT_mks * np.trapz(abs(self.AT)**2)
+    
+    def set_epp(self, desired_epp_J):
+        r""" Set the energy per pulse (in Joules)
+            
+            Parameters
+            ----------
+            desired_epp_J : float
+                 the value to set the pulse energy [J]
+                 
+            Returns
+            -------
+            nothing
+            """
+        self.set_AT(self.AT * np.sqrt( desired_epp_J / self.calc_epp() ) )
+        
         
     def chirp_pulse_W(self, GDD, TOD=0, FOD = 0.0, w0_THz = None):
         r""" Alter the phase of the pulse with :math:`\beta_2, \beta_3, \beta_4`

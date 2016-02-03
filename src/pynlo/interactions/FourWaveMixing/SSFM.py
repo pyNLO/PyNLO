@@ -37,7 +37,8 @@ class SSFM:
     METHOD_SSFM,METHOD_RK4IP = range(2)    
     def __init__(self,  local_error = 0.001, dz = 1e-5,
                  disable_Raman = False, disable_self_steepening = False,
-                 suppress_iteration = True, USE_SIMPLE_RAMAN = False):
+                 suppress_iteration = True, USE_SIMPLE_RAMAN = False,
+                 f_R = 0.18, f_R0 = 0.18, tau_1 = 0.0122, tau_2 = 0.0320):
         self.iter = 0
         self.last_h = -1.0
         self.last_dir = 0.0
@@ -50,12 +51,12 @@ class SSFM:
 
         # Raman fraction; may change depending upon which calculation method is
         # used 
-        self.f_R = 0.18
+        self.f_R = f_R
         # The value for the old-style Raman response
-        self.f_R0 = 0.18
+        self.f_R0 = f_R0
         
-        self.tau_1 = 0.0122
-        self.tau_2 = 0.0320
+        self.tau_1 = tau_1
+        self.tau_2 = tau_2
         self.dz = dz
         self.dz_min = 1e-12
         self.suppress_iteration = suppress_iteration
@@ -429,7 +430,7 @@ class SSFM:
         self.setup_fftw(pulse_in, fiber, output_power)
 
         for i in range(n_steps):                        
-            print "steps:", i, "totaldist:", fiber.length * (1 - np.float(i)/n_steps)
+            print "Step:", i, "Distance remaining:", fiber.length * (1 - np.float(i)/n_steps)
             self.integrate_over_dz(delta_z)            
             AW[:,i] = self.conditional_ifftshift(self.FFT_t_2(self.A))
             AT[:,i] = self.conditional_ifftshift(self.A)

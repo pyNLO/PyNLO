@@ -2,7 +2,6 @@
 """
 Created on Fri May 29 11:23:17 2015
 
-Sellemeier coefficients and nonlinear parameter for AsGaSe_2
 This file is part of pyNLO.
 
     pyNLO is free software: you can redistribute it and/or modify
