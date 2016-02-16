@@ -24,7 +24,7 @@ from pynlo.media.crystals.CrystalContainer import Crystal
 
 class PPLN(Crystal):
     def __init__(self, temperature_celsius):
-        self.load({'T' : temperature_celsius})
+        self.load({'T_deg_C' : temperature_celsius})
     def load(self, params):
             """ Load AgGeSe2 data. params -- 'T' : crystal temperature (C)
             Uses parameters from Deng et al, Opt. Comm. 268, 1, 1 pp 110-114
@@ -32,7 +32,7 @@ class PPLN(Crystal):
             crystal using mid-infrared difference-frequency generation', which
             includes temperature dependence. """
     
-            self.T = params["T"]
+            self.T = params["T_deg_C"]
             self.PP = 'PP'
             self.sellmeier_type ='deng'
             self.a1  = 5.39121
