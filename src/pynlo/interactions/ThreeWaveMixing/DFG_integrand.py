@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
-#
-#Created on Wed Dec 11 09:25:25 2013
-#This file is part of pyNLO.
-#
-#    pyNLO is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    pyNLO is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
-#@author: Dan Maser, Gabe Ycas
+"""
+Difference frequency generation module
+
+Defines:
+    - The dfg_problem, a class which can be intergrated by the pyNLO ODESolve
+    - The fftcomputer, which handles FFTs using pyFFTW
+    - A helper class, dfg_results_interface, which provides a Pulse-class based
+      wrapper around the dfg results.     
+
+
+Authors: Dan Maser, Gabe Ycas
+"""
+
 
 
 import numpy as np
