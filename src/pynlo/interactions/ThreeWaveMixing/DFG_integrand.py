@@ -349,8 +349,7 @@ class dfg_problem:
     def process_stepper_output(self, solver_out):
         """ Post-process output of ODE solver.
         
-        Description
-        -----------
+
         The saved data from an ODE solved are the pump, signal, and idler in
         the dispersionless reference frame. To see the pulses "as they really
         are", this dispersion must be added back in.
@@ -398,7 +397,7 @@ class dfg_results_interface:
         Interface to output of DFG solver. This class provides a clean way
         of working with the DFG field using the Pulse class. 
         
-        Usage
+        Notes
         -----
         After initialization, calling::
             
