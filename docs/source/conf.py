@@ -22,6 +22,7 @@ import shlex
 sys.path.insert(0, os.path.abspath(os.path.join('.', 'PyNLO_Root')))
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+on_rtd=True
 if on_rtd:
     if sys.version[0] == '3':  # Python 3
         from unittest.mock import MagicMock
@@ -35,7 +36,7 @@ if on_rtd:
         def __getattr__(cls, name):
                 return Mock()
 
-    MOCK_MODULES = ['pyfftw', 'scipy','scipy.fftpack','scipy.interpolate', 'numpy', 'matplotlib', 'matplotlib.pyplot']
+    MOCK_MODULES = ['pyfftw', 'scipy','scipy.fftpack','scipy.interpolate', 'scipy.constants', 'numpy', 'matplotlib', 'matplotlib.pyplot']
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 

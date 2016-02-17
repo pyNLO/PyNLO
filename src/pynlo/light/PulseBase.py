@@ -34,7 +34,10 @@ class Pulse:
                 warnings.warn("frep should be specified in MHz; large value given.")
         if n is not None:
             self.set_NPTS(n)            
-        
+        # Constants, moved here so that module runs through Sphynx autodoc when
+        # scipy is Mocked out.
+        self._c_nmps = constants.value('speed of light in vacuum')*1e9/1e12 # c in nm/ps
+        self._c_mks  = constants.value('speed of light in vacuum') # m/s        
     # Private variables:
     # This set is the minimum number required to completely specify the light
     # field. All other representations are derived from them.
@@ -50,8 +53,8 @@ class Pulse:
                                   # and filled in later)         
     _external_units     = None
     # Constants
-    _c_nmps = constants.speed_of_light*1e9/1e12 # c in nm/ps
-    _c_mks  = constants.speed_of_light # m/s
+    _c_nmps = None
+    _c_mks  = None
     # Cached values for expensive functions that I have identified as widely-used
     # in a profiler. Note that this is a sparse list...
     # Wavelength
