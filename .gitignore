@@ -50,7 +50,6 @@ docs/build/*
 build/*
 # Compiled python
 *.pyc
-pyNLO.egg-info/dependency_links.txt
-pyNLO.egg-info/PKG-INFO
-pyNLO.egg-info/top_level.txt
-pyNLO.egg-info/SOURCES.txt
+# Setup tools directories
+pyNLO.egg-info/*
+src/pyNLO.egg-info/*
