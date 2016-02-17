@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+#from distutils.core import setup
+# By popular demand...
+from setuptools import setup
 
 setup(name='pyNLO',
       version='0.1',
