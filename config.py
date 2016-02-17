@@ -17,7 +17,7 @@ latex_documents = [
   ('index', 'pynlo.tex', u'PyNLO Documentation',
    u'', 'manual'),
 ]
-
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     if sys.version[0] == '3':  # Python 3
         from unittest.mock import MagicMock
