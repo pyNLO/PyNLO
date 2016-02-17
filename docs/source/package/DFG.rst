@@ -1,5 +1,5 @@
 DFG Integrand
 -------------
-.. autoclass:: pynlo.interactions.ThreeWaveMixing.DFG_integrand.dfg_problem
+.. automodule:: pynlo.interactions.ThreeWaveMixing.DFG_integrand
 	:members:
 	:show-inheritance:

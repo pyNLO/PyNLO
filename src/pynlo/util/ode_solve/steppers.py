@@ -1,23 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 09 15:25:30 2015
-
-This file is part of pyNLO.
-
-    pyNLO is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    pyNLO is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
-
-ODE solver stuff, adapted from Numerical Recipes
+ODE solver, adapted from Numerical Recipes
 
 @author: ycasg
 """
@@ -28,6 +11,16 @@ import warnings
 np.seterr(all='warn')
 
 class Output:
+    """ The output class is used by the ode solver to store the integrated output
+    at specified *x* values. In addition to housing the matrices containing the
+    *x* and *y* data, the class also provides a simple function call to store 
+    new data and resizes the output grids dynamically.
+    
+    Parameters
+    ----------
+    nsaves
+        Number of anticipated save points, used for calculating value of *x*
+        at which integrand will be evaluted and saved. """
     kmax    = 0
     nvar    = 0
     nsave   = 0
@@ -40,6 +33,7 @@ class Output:
     xsave   = None
     ysave   = None
     def __init__(self, nsaves = None):
+
         if nsaves is None:
             self.kmax   = -1
             self.dense  = False
@@ -50,6 +44,21 @@ class Output:
             self.count  = 0
             self.dense  = nsaves > 0
     def init(self, neqn, xlo, xhi, dtype = np.double):
+        """ Setup routine, which creates the output arrays. If nsaves was provided
+            at class initialization, the positions at which the integrand will be
+            saved are also calculated.
+            
+            Parameters
+            ----------
+            neqn:
+                Number of equations, or the number of y values at each x.
+            xlo:
+                Lower bound of integration (start point.)
+            xhi:
+                Upper bound of integration (stop point.)                
+            dtype:
+                Data type of each y. Any Python data type is acceptable.
+            """
         self.nvar = neqn
         self.dtype = dtype
         if self.kmax == -1:
@@ -160,8 +169,12 @@ class ODEint:
     h       = 0.0
     def __init__(self, ystartt, xx1, xx2, atol, rtol, h1, hminn, outt,
                  stepper_class, RHS_class, dense = True, dtype = None):
-         """ Class for integrating ODEs. This code is based upon Numerical Recipes
-         3rd edition's imlementation, but with some changes due to the translation:
+         """ Class for integrating ODEs. 
+         
+         Notes
+         -----
+         This code is based upon *Numerical Recipes 3rd edition*'s 
+         imlementation, but with some changes due to the translation:
          1.) The ODE is passed as a class instance 'RHS_class'. This class must
              have a member function deriv(x,y,dydx) which calculates the RHS
              and writes the value into dydx.
@@ -169,7 +182,8 @@ class ODEint:
              instead, the stepper class to be used is passed to the ODEint 
              constructor (stepper_class).
          3.) As a consequence of (2), x and y are stored in the stepper instance
-             (ODEint.s) and not in ODEint iteself.  """
+             (ODEint.s) and not in ODEint iteself.  
+         """
          self.nvar  = len(ystartt)         
          # If no dtype is specified, use the data type of ystartt
          if dtype is None:

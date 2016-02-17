@@ -35,13 +35,19 @@ range1 = np.arange(steps)
 centerwl = 835.0
 fiber_length = 0.15
 
-pump_power = 1.0e4
+pump_power = 1.0e4 # Peak power
 pump_pulse_length = 28.4e-3
 
 npoints = 2**13
 
-init = SechPulse(pump_power, pump_pulse_length, centerwl, time_window = 10.0,
-                    GDD = 0, TOD = 0.0, NPTS = npoints, frep_MHz = 100, power_is_avg = False)
+init = SechPulse(power                  =   pump_power, 
+                 T0_ps                  =   pump_pulse_length, 
+                 center_wavelength_nm   =   centerwl, 
+                 time_window_ps         = 10.0,
+                 GDD = 0, TOD = 0.0, 
+                 NPTS = npoints, 
+                 frep_MHz               = 100.0, 
+                 power_is_avg           = False)
 
 fiber1 = fiber.FiberInstance() 
 fiber1.load_from_db( fiber_length, 'dudley')

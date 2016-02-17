@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
-#
-#Created on Wed Dec 11 09:25:25 2013
-#This file is part of pyNLO.
-#
-#    pyNLO is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    pyNLO is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
-#@author: Dan Maser, Gabe Ycas
+"""
+Difference frequency generation module
+
+Defines:
+    - The dfg_problem, a class which can be intergrated by the pyNLO ODESolve
+    - The fftcomputer, which handles FFTs using pyFFTW
+    - A helper class, dfg_results_interface, which provides a Pulse-class based
+      wrapper around the dfg results.     
+
+
+Authors: Dan Maser, Gabe Ycas
+"""
+
 
 
 import numpy as np
@@ -26,6 +22,7 @@ from scipy import constants
 from pynlo.light import OneDBeam
 import exceptions
 from pynlo.light.DerivedPulses import NoisePulse
+from pynlo.light.PulseBase import Pulse
 from matplotlib import pyplot as plt
 
 
@@ -65,10 +62,10 @@ class dfg_problem:
         idler_cwl = 1.0/(1.0/pump_in.center_wavelength_nm -\
                          1.0/sgnl_in.center_wavelength_nm)
 
-        idlr_in = NoisePulse(center_wavelength_nm = idler_cwl, 
-                             frep_MHz = pump_in.frep_MHz,
-                             NPTS = pump_in.NPTS,
-                             time_window = pump_in.time_window_ps)        
+        idlr_in = NoisePulse(center_wavelength_nm   = idler_cwl, 
+                             frep_MHz               = pump_in.frep_MHz,
+                             NPTS                   = pump_in.NPTS,
+                             time_window_ps         = pump_in.time_window_ps)        
         # Check that fields do not overlap
         if ( max(pump_in.wl_nm) > min(sgnl_in.wl_nm) ): 
             raise exceptions.ValueError("Pump and signal field grids overlap.")
@@ -86,7 +83,7 @@ class dfg_problem:
         
         self.c = constants.speed_of_light
         self.eps = constants.epsilon_0
-        self.frep = sgnl_in.frep_Hz
+        self.frep = sgnl_in.frep_mks
         self.veclength = sgnl_in.NPTS
         if not pump_in.NPTS == sgnl_in.NPTS == idlr_in.NPTS:
             raise exceptions.ValueError("""Pump, signal, and idler do not have
@@ -233,9 +230,9 @@ class dfg_problem:
             raise exceptions.AttributeError('Crystal type not known; deff not set.')
         # After epic translation of Dopri853 from Numerical Recipes' C++ to
         # native Python/NumPy, we can use complex numbers throughout:
-        self.phi_p[:] = np.exp(1j * (self.k_p + self.k_p_0) * z)
-        self.phi_s[:] = np.exp(1j * (self.k_s + self.k_s_0) * z)
-        self.phi_i[:] = np.exp(1j * (self.k_i + self.k_i_0) * z)
+        self.phi_p[:] = np.exp(-1j * (self.k_p + self.k_p_0) * z)
+        self.phi_s[:] = np.exp(-1j * (self.k_s + self.k_s_0) * z)
+        self.phi_i[:] = np.exp(-1j * (self.k_i + self.k_i_0) * z)
         z_to_focus = z - self.crystal.length_mks/2.0
         if self._calc_gouy:
             self.phi_p *= self.pump_beam.calculate_gouy_phase(z_to_focus, self.n_p)
@@ -349,6 +346,41 @@ class dfg_problem:
             # idler
             dydx[2*L:3*L] = 1j * 2 * self.ApAs * self.idlr.W_mks * deff / (constants.speed_of_light* self.n_i) / \
                     (self.idlr_P_to_a)
+    def process_stepper_output(self, solver_out):
+        """ Post-process output of ODE solver.
+        
+
+        The saved data from an ODE solved are the pump, signal, and idler in
+        the dispersionless reference frame. To see the pulses "as they really
+        are", this dispersion must be added back in.
+        
+        Parameters
+        ----------
+        solver_out
+            Output class instance from ODESolve
+        Returns
+        ---------
+        dfg_results
+            Instance of dfg_results_interface class
+        """
+        npoints = self.veclength
+        
+        pump_out = solver_out.ysave[0:solver_out.count, 0        :   npoints]
+        sgnl_out = solver_out.ysave[0:solver_out.count, npoints  : 2*npoints]
+        idlr_out = solver_out.ysave[0:solver_out.count, 2*npoints: 3*npoints]
+        zs       = solver_out.xsave[0:solver_out.count]
+        for i in xrange(solver_out.count):
+            z = zs[i]
+            phi_p = np.exp(-1j * (self.k_p + self.k_p_0) * z)
+            phi_s = np.exp(-1j * (self.k_s + self.k_s_0) * z)
+            phi_i = np.exp(-1j * (self.k_i + self.k_i_0) * z)
+            
+            pump_out[i, :] *= phi_p
+            sgnl_out[i, :] *= phi_s
+            idlr_out[i, :] *= phi_i
+        interface = dfg_results_interface(self, pump_out, sgnl_out, idlr_out, zs)
+        return interface
+        
     def format_overlap_plots(self):
         plt.subplot(131)
         plt.ylabel('Overlap with smallest beam')
@@ -360,6 +392,79 @@ class dfg_problem:
         plt.ylabel('Beam curvature (m)')
         plt.xlabel('Crystal length (mm)')            
 
+class dfg_results_interface:
+    """
+        Interface to output of DFG solver. This class provides a clean way
+        of working with the DFG field using the Pulse class. 
+        
+        Notes
+        -----
+        After initialization, calling::
+            
+                get_{pump,sgnl,idlr}(n)
+        
+        will set the dfg results class' "pulse" instance to the appropriate
+        field and return it.
+        
+        Example
+        -------
+        To plot the 10th saved signal field, you would call::
+                
+                p = dfg_results_interface.get_sgnl(10-1)
+                plt.plot(p.T_ps, abs(p.AT)**2 )
+        
+        To get the actual position (z [meters]) that this corresponds to,
+        call::
+                
+                z = dfg_results_interface.get_z(10-1)
+        
+"""
+    n_saves = 0
+    pump_field = []
+    sgnl_field = []
+    idlr_field = []
+    
+    def __init__(self, integrand_instance, pump, sgnl, idlr, z):        
+        self.pulse = integrand_instance.pump.create_cloned_pulse()
+        
+        self.pump_wl = integrand_instance.pump.center_wavelength_nm
+        self.sgnl_wl = integrand_instance.sgnl.center_wavelength_nm
+        self.idlr_wl = integrand_instance.idlr.center_wavelength_nm
+        
+        self.pump_field = pump[:]
+        self.sgnl_field = sgnl[:]
+        self.idlr_field = idlr[:]
+
+        self.pump_max_field = np.max(abs(pump))
+        self.sgnl_max_field = np.max(abs(sgnl))
+        self.idlr_max_field = np.max(abs(idlr))
+        
+
+        self.pump_max_temporal = np.max(abs(np.fft.fft(pump)))
+        self.sgnl_max_temporal = np.max(abs(np.fft.fft(sgnl)))
+        self.idlr_max_temporal = np.max(abs(np.fft.fft(idlr)))
+        
+        self.zs         = z[:]
+        self.n_saves = len(z)
+        
+    def get_z(self, n):
+        return self.zs[n]
+        
+    def get_pump(self, n):
+        self.pulse.set_AW(self.pump_field[n])
+        self.pulse.set_center_wavelength_nm(self.pump_wl)
+        return self.pulse
+                
+    def get_sgnl(self, n):
+        self.pulse.set_AW(self.sgnl_field[n])
+        self.pulse.set_center_wavelength_nm(self.sgnl_wl)
+        return self.pulse
+        
+    def get_idlr(self, n):
+        self.pulse.set_AW(self.idlr_field[n])
+        self.pulse.set_center_wavelength_nm(self.idlr_wl)
+        return self.pulse
+        
 class fftcomputer:
     def __init__(self, gridsize):
         self.gridsize = gridsize

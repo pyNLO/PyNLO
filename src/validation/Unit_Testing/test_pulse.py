@@ -28,8 +28,13 @@ class SechPowerTest(unittest.TestCase):
     fr = 2720.
     EPP = power / (fr*1e6)
     def setUp(self):        
-        self.sech = SechPulse(self.power, 0.0100, 1064, NPTS = self.TEST_PTS,
-                              time_window = 12.345, frep_MHz = self.fr, power_is_avg = True)
+        self.sech = SechPulse(power                 =   self.power,
+                              T0_ps                 = 0.0100, 
+                              center_wavelength_nm  =   1064, 
+                              NPTS                  = self.TEST_PTS,
+                              time_window_ps        = 12.345, 
+                              frep_MHz              = self.fr, 
+                              power_is_avg          = True)
     def tearDown(self):
         pass
     def test_wavelength_meters(self):   
@@ -37,7 +42,11 @@ class SechPowerTest(unittest.TestCase):
 class SechTest(unittest.TestCase):    
     TEST_PTS = 2**8
     def setUp(self):
-        self.sech = SechPulse(2.727, 0.0100, 1064, NPTS = self.TEST_PTS, time_window = 12.345)
+        self.sech = SechPulse(power                 = 2.727, 
+                              T0_ps                 = 0.0100, 
+                              center_wavelength_nm  = 1064, 
+                              NPTS                  = self.TEST_PTS, 
+                              time_window_ps        = 12.345)
     def tearDown(self):
         pass
     def test_wavelength_meters(self):   

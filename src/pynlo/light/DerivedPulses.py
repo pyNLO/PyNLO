@@ -26,7 +26,7 @@ from pynlo.light.PulseBase import Pulse
 
 class SechPulse(Pulse):
     def __init__(self, power, T0_ps, center_wavelength_nm,
-                 time_window = 10., frep_MHz = 100., NPTS = 2**10, 
+                 time_window_ps = 10., frep_MHz = 100., NPTS = 2**10, 
                  GDD = 0, TOD = 0, chirp2 = 0, chirp3 = 0,
                  power_is_avg = False):
         """Generate sech pulse A(t) = sqrt(P0 [W]) * sech(t/T0 [ps])
@@ -36,9 +36,9 @@ class SechPulse(Pulse):
         Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS)
         # make sure we weren't passed mks units        
         assert (center_wavelength_nm > 1.0) 
-        assert (time_window > 1.0 )                
+        assert (time_window_ps > 1.0 )                
         self.set_center_wavelength_nm(center_wavelength_nm)        
-        self.set_time_window_ps(time_window)        
+        self.set_time_window_ps(time_window_ps)
                         
         ### Generate pulse
         if not power_is_avg:
@@ -52,7 +52,7 @@ class SechPulse(Pulse):
         
 class GaussianPulse(Pulse):
     def __init__(self, power, T0_ps, center_wavelength_nm,
-                 time_window = 10., frep_MHz = 100., NPTS = 2**10, 
+                 time_window_ps = 10., frep_MHz = 100., NPTS = 2**10, 
                  GDD = 0, TOD = 0, chirp2 = 0, chirp3 = 0,
                  power_is_avg = False):
         """Generate Gaussian pulse A(t) = sqrt(peak_power[W]) * 
@@ -63,9 +63,9 @@ class GaussianPulse(Pulse):
         Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS)
         # make sure we weren't passed mks units        
         assert (center_wavelength_nm > 1.0) 
-        assert (time_window > 1.0 )        
+        assert (time_window_ps > 1.0 )        
         self.set_center_wavelength_nm(center_wavelength_nm)
-        self.set_time_window_ps(time_window)        
+        self.set_time_window_ps(time_window_ps)        
         
         GDD = GDD
         TOD = TOD
@@ -77,7 +77,7 @@ class GaussianPulse(Pulse):
         self.chirp_pulse_T(chirp2, chirp3, T0_ps)
         
 class FROGPulse(Pulse):
-    def __init__(self, time_window, center_wavelength_nm, power,frep_MHz = 100., NPTS = 2**10,
+    def __init__(self, time_window_ps, center_wavelength_nm, power,frep_MHz = 100., NPTS = 2**10,
                  power_is_avg = False,
                  fileloc = 'O:\\OFM\\Maser\\FROG\\frog_141020-  7\\Speck.dat', # default EDFA spectrum
                  flip_phase = True):
@@ -96,8 +96,8 @@ class FROGPulse(Pulse):
             self.fileloc   = fileloc
             # make sure we weren't passed mks units
             assert (center_wavelength_nm > 1.0) 
-            assert (time_window > 1.0 )
-            self.set_time_window_ps(time_window)        
+            assert (time_window_ps > 1.0 )
+            self.set_time_window_ps(time_window_ps)
             self.set_center_wavelength_nm(center_wavelength_nm) # reference wavelength (nm)                         
             
             # power -> EPP
@@ -132,26 +132,26 @@ class FROGPulse(Pulse):
             print 'File not found.'
 
 class NoisePulse(Pulse):
-    def __init__(self, center_wavelength_nm, time_window = 10., NPTS = 2**8,
+    def __init__(self, center_wavelength_nm, time_window_ps = 10., NPTS = 2**8,
                  frep_MHz = None):
         Pulse.__init__(self, n = NPTS, frep_MHz = frep_MHz)
         self.set_center_wavelength_nm(center_wavelength_nm)
-        self.set_time_window_ps(time_window)        
+        self.set_time_window_ps(time_window_ps)        
         
         self.set_AW( 1e-30 * np.ones(self.NPTS) * np.exp(1j * 2 * np.pi *
                  1j * np.random.rand(self.NPTS)))
                  
 class CWPulse(Pulse):
-    def __init__(self, avg_power, center_wavelength_nm, time_window = 10.0,
+    def __init__(self, avg_power, center_wavelength_nm, time_window_ps = 10.0,
                  NPTS = 2**8,offset_from_center_THz = None):
         Pulse.__init__(self, n = NPTS)
         # make sure we weren't passed mks units
         assert (center_wavelength_nm > 1.0) 
-        assert (time_window > 1.0 )        
+        assert (time_window_ps > 1.0 )        
 
         if offset_from_center_THz is None:            
             self.set_center_wavelength_nm(center_wavelength_nm)
-            self.set_time_window_ps(time_window)        
+            self.set_time_window_ps(time_window_ps)        
          
             # Set the time domain to be CW, which should give us a delta function in
             # frequency. Then normalize that delta function (in frequency space) to
@@ -159,20 +159,20 @@ class CWPulse(Pulse):
             self.set_AT(np.ones(self.NPTS,))
             self.set_AW(self.AW * np.sqrt(avg_power) / sum(abs(self.AW)) )
         else:
-            dF = 1.0/time_window
+            dF = 1.0/time_window_ps
             n_offset = np.round( offset_from_center_THz/dF)      
             
             center_THz = self._c_nmps/center_wavelength_nm -\
                                     n_offset * dF
             center_nm = self._c_nmps / center_THz
-            self.set_time_window_ps(time_window)
+            self.set_time_window_ps(time_window_ps)
         
             self.set_center_wavelength_nm(center_nm)
             aws = np.zeros((self.NPTS, ))
             aws[int(self.NPTS/2.0) + int(n_offset)  ] = 1.0 *np.sqrt(avg_power)
             self.set_AW(aws)
         
-    def gen_OSA(self, time_window, center_wavelength_nm, power, 
+    def gen_OSA(self, time_window_ps, center_wavelength_nm, power, 
                  power_is_epp = False,
                  fileloc = 'O:\\OFM\\Maser\\Dual-Comb 100 MHz System\\Pump spectrum-Yb-101614.csv',
                  log = True, rows = 30): # Yb spectrum
@@ -190,10 +190,8 @@ class CWPulse(Pulse):
         try:
             self.fileloc = fileloc
             
-            time_window = self.internal_time_from_ps(time_window)            
-            self.twidth = time_window                       # Time window in ps
+            self.set_time_window_ps(time_window_ps)
                   
-            center_wavelength_nm = self.internal_wl_from_nm(center_wavelength_nm)
             self.center_wl = center_wavelength_nm                 # reference wavelength (nm)             
             
             self.w0 = (2. * np.pi * self.c) / self.center_wl # reference angular frequency                
