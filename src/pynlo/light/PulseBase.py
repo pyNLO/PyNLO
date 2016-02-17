@@ -472,8 +472,10 @@ class Pulse:
         self._set_centerfrequency(self._c_nmps /  (wl * 1.0e9) )
         
     def set_NPTS(self, NPTS):
-        r""" Set the grid size. The actual grid arrays are *not* altered
-            automatically to reflect a change.
+        r""" Set the grid size. 
+        
+        The actual grid arrays are *not* altered
+        automatically to reflect a change.
         
         Parameters
         ----------
@@ -484,8 +486,10 @@ class Pulse:
         self._n = int(NPTS)
         self._check_ready() 
     def set_frep_MHz(self, fr_MHz):
-        r""" Set the pulse repetition frequency. This is used to convert between
-            pulse energy and average power.
+        r""" Set the pulse repetition frequency. 
+        
+        This parameter used internally to convert between pulse energy and 
+        average power.
         
         Parameters
         ----------
@@ -495,8 +499,10 @@ class Pulse:
         """        
         self._frep_MHz = fr_MHz
     def set_time_window_ps(self, T):
-        r""" Set the total time window of the grid. This sets the grid dT, and
-            implicitly changes the frequency span (~1/dT).
+        r""" Set the total time window of the grid. 
+        
+        This sets the grid dT, and
+        implicitly changes the frequency span (~1/dT).
         
         Parameters
         ----------
@@ -510,8 +516,10 @@ class Pulse:
         # dT is simply time_window / NPTS
         self._set_time_window(T)
     def set_time_window_s(self, T):
-        r""" Set the total time window of the grid. This sets the grid dT, and
-            implicitly changes the frequency span (~1/dT).
+        r""" Set the total time window of the grid. 
+        
+        This sets the grid dT, and
+        implicitly changes the frequency span (~1/dT).
         
         Parameters
         ----------
@@ -523,8 +531,10 @@ class Pulse:
         self._set_time_window(T * 1e12)
         
     def set_frequency_window_THz(self, DF):
-        r""" Set the total frequency window of the grid. This sets the grid dF, and
-            implicitly changes the temporal span (~1/dF).
+        r""" Set the total frequency window of the grid. 
+        
+        This sets the grid dF, and
+        implicitly changes the temporal span (~1/dF).
         
         Parameters
         ----------
@@ -539,8 +549,10 @@ class Pulse:
         T = self._n / float(DF)
         self._set_time_window(T)
     def set_frequency_window_mks(self, DF):
-        r""" Set the total frequency window of the grid. This sets the grid dF, and
-            implicitly changes the temporal span (~1/dF).
+        r""" Set the total frequency window of the grid. 
+        
+        This sets the grid dF, and
+        implicitly changes the temporal span (~1/dF).
         
         Parameters
         ----------
@@ -620,7 +632,9 @@ class Pulse:
         
         
     def chirp_pulse_W(self, GDD, TOD=0, FOD = 0.0, w0_THz = None):
-        r""" Alter the phase of the pulse with :math:`\beta_2, \beta_3, \beta_4`
+        r""" Alter the phase of the pulse 
+        
+        Apply the dispersion coefficients :math:`\beta_2, \beta_3, \beta_4`
         expanded around frequency :math:`\omega_0`.
         
         Parameters
