@@ -17,7 +17,7 @@ latex_documents = [
   ('index', 'pynlo.tex', u'PyNLO Documentation',
    u'', 'manual'),
 ]
-
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     if sys.version[0] == '3':  # Python 3
         from unittest.mock import MagicMock
@@ -31,7 +31,8 @@ if on_rtd:
         def __getattr__(cls, name):
                 return Mock()
 
-    MOCK_MODULES = ['pyfftw', 'scipy', 'numpy', 'matplotlib', 'matplotlib.pyplot']]
+    MOCK_MODULES = ['pyfftw', 'scipy', 'numpy', 'matplotlib', 'matplotlib.pyplot']
+	print "Mocking ", MOCK_MODULES
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+#from distutils.core import setup
+# By popular demand...
+from setuptools import setup
 
 setup(name='pyNLO',
       version='0.1',
@@ -19,6 +21,6 @@ setup(name='pyNLO',
                 'pynlo.media.fibers',
                 'pynlo.util',
                 'pynlo.util.ode_solve'],
-      package_dir = {'pynlo': 'src/pynlo'},
+      package_dir = {'': 'src'},
       package_data = {'pynlo': ['media/fibers/*.txt']},
      )

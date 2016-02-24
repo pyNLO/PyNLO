@@ -23,6 +23,7 @@ the analytic solution (from Boyd.) Initial conditions are slightly randomized.
 import numpy as np
 from scipy.constants import speed_of_light
 from pynlo.light.DerivedPulses import CWPulse
+from pynlo.light import DerivedPulses
 from pynlo.media import crystals
 from pynlo.interactions.ThreeWaveMixing import dfg_problem
 from pynlo.util import ode_solve
@@ -56,8 +57,8 @@ class TestCWDFG(unittest.TestCase):
         twind = 25.
         beamwaist = 100e-3
         
-        pump_in = CWPulse(pump_power, pump_wl_nm, NPTS = npoints, time_window = twind)
-        sgnl_in = CWPulse(sgnl_power, sgnl_wl_nm, NPTS = npoints, time_window = twind)
+        pump_in = CWPulse(pump_power, pump_wl_nm, NPTS = npoints, time_window_ps = twind)
+        sgnl_in = CWPulse(sgnl_power, sgnl_wl_nm, NPTS = npoints, time_window_ps = twind)
                 
         integrand = dfg_problem(pump_in, sgnl_in, crystal,
                       disable_SPM = True, pump_waist = beamwaist, apply_gouy_phase = True)
@@ -145,8 +146,8 @@ class TestCW_offset_DFG(unittest.TestCase):
         twind = 25.
         beamwaist = 1000e-3
         
-        pump_in = CWPulse(pump_power, pump_wl_nm, NPTS = npoints, time_window = twind, offset_from_center_THz = pump_freq_offset)
-        sgnl_in = CWPulse(sgnl_power, sgnl_wl_nm, NPTS = npoints, time_window = twind, offset_from_center_THz = sgnl_freq_offset)
+        pump_in = CWPulse(pump_power, pump_wl_nm, NPTS = npoints, time_window_ps = twind, offset_from_center_THz = pump_freq_offset)
+        sgnl_in = CWPulse(sgnl_power, sgnl_wl_nm, NPTS = npoints, time_window_ps = twind, offset_from_center_THz = sgnl_freq_offset)
                 
         integrand = dfg_problem(pump_in, sgnl_in, crystal,
                       disable_SPM = True, pump_waist = beamwaist, apply_gouy_phase = False)

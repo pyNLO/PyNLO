@@ -37,7 +37,11 @@ T0 = 1
 beta = [-1, 0]
 P0 = (abs(beta[0] * 1e-3) / gamma / T0**2) * 16
 
-init =SechPulse(P0, T0, centerwl, NPTS = 2**13)
+init =SechPulse(power                   = P0, 
+                T0_ps                   = T0,
+                center_wavelength_nm    = centerwl,
+                time_window_ps         = 10.0,
+                NPTS = 2**13)
 
 fiber1 = fiber.FiberInstance()
 fiber1.generate_fiber(fiber_length, centerwl, beta, gamma, 0, "ps^n/km")
