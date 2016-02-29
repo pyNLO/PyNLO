@@ -36,7 +36,7 @@ if on_rtd:
         def __getattr__(cls, name):
                 return Mock()
 
-    MOCK_MODULES = ['pyfftw', 'scipy','scipy.fftpack','scipy.interpolate', 'scipy.constants', 'numpy', 'matplotlib', 'matplotlib.pyplot']
+    MOCK_MODULES = ['pyfftw']
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
