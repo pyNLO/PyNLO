@@ -3,6 +3,7 @@
 #from distutils.core import setup
 # By popular demand...
 from setuptools import setup
+import os
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:
