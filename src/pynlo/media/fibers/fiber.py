@@ -46,6 +46,7 @@ from pynlo.media.fibers import JSONFiberLoader
 #        "gain_x_units"
 
 class FiberInstance:
+    """This is a class that contains the information about a fiber."""
     betas       = None
     length      = None
     fibertype   = None
@@ -58,6 +59,7 @@ class FiberInstance:
         self.is_simple_fiber = False
         self.fiberloader = JSONFiberLoader.JSONFiberLoader('nist_fibers')
     def load_from_db(self, length, fibertype, poly_order = 2):
+        """This loads a fiber from the database. """
         self.fibertype = fibertype
         self.fiberspecs = self.fiberloader.get_fiber(fibertype)
         self.length = length
@@ -67,6 +69,8 @@ class FiberInstance:
         self.load_dispersion()
 
     def load_dispersion(self):
+        """This is typically called by the "load_from_db" function. 
+        It takes the values from the self.fiberspecs dict and transfers them into the appropriate variables. """
         if self.fiberspecs["dispersion_format"] == "D":
             self.dispersion_x_units = self.fiberspecs["dispersion_x_units"]
             self.dispersion_y_units = self.fiberspecs["dispersion_y_units"]
@@ -84,6 +88,8 @@ class FiberInstance:
             print "Error: no dispersion found."
             return None
     def get_betas(self,pulse):
+        """This provides the propagation constant (beta) at the frequencies of the supplied pulse grid.
+        The units are 1/meters """
         B = np.zeros((pulse.NPTS,))
         if self.fiberspecs["dispersion_format"] == "D":
             self.betas = DTabulationToBetas(pulse.center_wavelength_nm,
@@ -147,8 +153,10 @@ class FiberInstance:
             return np.zeros((pulse.NPTS,))
 
     def Beta2_to_D(self, pulse): # in ps / nm / km
+        """ This provides the dispersion parameter D (in ps / nm / km) at each frequency of the suppied pulse"""
         return -2 * np.pi * self.c / pulse.wl_nm**2 * self.Beta2(pulse) * 1000
     def Beta2(self, pulse):
+        """ This provides the beta_2 (in ps^2 / meter)."""
         dw = pulse.V_THz[1] - pulse.V_THz[0]
         out = np.diff(self.get_betas(pulse), 2) / dw**2
         out = np.append(out[0], out)
@@ -157,6 +165,8 @@ class FiberInstance:
 
     def generate_fiber(self, length, center_wl_nm, betas, gamma_W_m, gain = 0,
                        gvd_units = 'ps^n/m', label = 'Simple Fiber'):
+        """ This generates a fiber instance using the beta-coefficients."""
+        
         self.length = length
         self.fiberspecs= {}
         self.fiberspecs['dispersion_format'] = 'GVD'
