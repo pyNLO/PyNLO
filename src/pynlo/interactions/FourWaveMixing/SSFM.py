@@ -24,6 +24,7 @@ from numpy.fft import fftshift, ifftshift
 from pynlo.interactions.FourWaveMixing import global_variables
 from pynlo.light.PulseBase import Pulse
 import gc
+import scipy.fftpack
 
 
 try:
@@ -31,7 +32,7 @@ try:
     PYFFTW_AVAILABLE=True
 except:
     PYFFTW_AVAILABLE=False
-
+    
 
 class SSFM:
     METHOD_SSFM,METHOD_RK4IP = range(2)    
@@ -114,15 +115,25 @@ class SSFM:
 #                                      direction='FFTW_BACKWARD')                                      
             
         else:
-            self.fft_input    = np.ndarray((self.n,), dtype='complex128')      
-            self.fft_output   = np.ndarray((self.n,), dtype='complex128')      
-            self.ifft_input   = np.ndarray((self.n,), dtype='complex128')      
-            self.ifft_output  = np.ndarray((self.n,), dtype='complex128')      
-    
-            self.fft_input_2  = np.ndarray((self.n,), dtype='complex128')      
-            self.fft_output_2 = np.ndarray((self.n,), dtype='complex128')      
-            self.ifft_input_2 = np.ndarray((self.n,), dtype='complex128')      
-            self.ifft_output_2= np.ndarray((self.n,), dtype='complex128')      
+            self.fft_input    = np.ndarray((self.n,), dtype='complex128')
+            self.fft_output   = np.ndarray((self.n,), dtype='complex128')
+            self.ifft_input   = np.ndarray((self.n,), dtype='complex128')
+            self.ifft_output  = np.ndarray((self.n,), dtype='complex128')
+
+            self.fft_input_2  = np.ndarray((self.n,), dtype='complex128')
+            self.fft_output_2 = np.ndarray((self.n,), dtype='complex128')
+            self.ifft_input_2 = np.ndarray((self.n,), dtype='complex128')
+            self.ifft_output_2= np.ndarray((self.n,), dtype='complex128')
+                                 
+            # self.fft_input    = pyfftw.empty_aligned(self.n, fft_n, dtype='complex128')
+            # self.fft_output   = pyfftw.empty_aligned(self.n, fft_n, dtype='complex128')
+            # self.ifft_input   = pyfftw.empty_aligned(self.n, fft_n, dtype='complex128')
+            # self.ifft_output  = pyfftw.empty_aligned(self.n, fft_n, dtype='complex128')
+            #
+            # self.fft_input_2  = pyfftw.empty_aligned(self.n, fft_n, dtype='complex128')
+            # self.fft_output_2 = pyfftw.empty_aligned(self.n, fft_n, dtype='complex128')
+            # self.ifft_input_2 = pyfftw.empty_aligned(self.n, fft_n, dtype='complex128')
+            # self.ifft_output_2= pyfftw.empty_aligned(self.n, fft_n, dtype='complex128')
     
             
         self.A_I    = np.ndarray((self.n,), dtype='complex128')      
@@ -510,9 +521,9 @@ class SSFM:
                 return ifftshift(self.fft())
         else:
             if global_variables.PRE_FFTSHIFT:
-                return np.fft.ifft(A)
+                return scipy.fftpack.ifft(A)
             else:
-                return ifftshift(np.fft.ifft(fftshift(A)))
+                return ifftshift(scipy.fftpack.ifft(fftshift(A)))
     def IFFT_t(self, A):        
         if global_variables.USE_PYFFTW:
             if global_variables.PRE_FFTSHIFT:
@@ -523,21 +534,21 @@ class SSFM:
                 return ifftshift(self.ifft())
         else:
             if global_variables.PRE_FFTSHIFT:
-                return np.fft.fft(A)
+                return scipy.fftpack.fft(A)
             else:
-                return ifftshift(np.fft.fft(fftshift(A)))
+                return ifftshift(scipy.fftpack.fft(fftshift(A)))
     def FFT_t_shift(self, A):
         if global_variables.USE_PYFFTW:
             self.fft_input[:] = fftshift(A)
             return ifftshift(self.fft())
         else:
-            return ifftshift(np.fft.ifft(fftshift(A)))
+            return ifftshift(scipy.fftpack.ifft(fftshift(A)))
     def IFFT_t_shift(self, A):
         if global_variables.USE_PYFFTW:
             self.ifft_input[:] = fftshift(A)
             return ifftshift(self.ifft())
         else:
-            return ifftshift(np.fft.fft(fftshift(A)))
+            return ifftshift(scipy.fftpack.fft(fftshift(A)))
     def FFT_t_2(self, A):        
         if global_variables.USE_PYFFTW:
             if global_variables.PRE_FFTSHIFT:
@@ -548,9 +559,9 @@ class SSFM:
                 return ifftshift(self.fft_2())
         else:
             if global_variables.PRE_FFTSHIFT:
-                return np.fft.ifft(A)
+                return scipy.fftpack.ifft(A)
             else:
-                return ifftshift(np.fft.ifft(fftshift(A)))
+                return ifftshift(scipy.fftpack.ifft(fftshift(A)))
     def IFFT_t_2(self, A):        
         if global_variables.USE_PYFFTW:
             if global_variables.PRE_FFTSHIFT:
@@ -561,9 +572,9 @@ class SSFM:
                 return ifftshift(self.ifft_2())
         else:
             if global_variables.PRE_FFTSHIFT:
-                return np.fft.fft(A)
+                return scipy.fftpack.fft(A)
             else:
-                return ifftshift(np.fft.fft(fftshift(A)))
+                return ifftshift(scipy.fftpack.fft(fftshift(A)))
     def IFFT_t_3(self, A):        
         if global_variables.USE_PYFFTW:
             if global_variables.PRE_FFTSHIFT:                
@@ -574,9 +585,9 @@ class SSFM:
                 return ifftshift(self.ifft_3())
         else:
             if global_variables.PRE_FFTSHIFT:
-                return np.fft.fft(A)
+                return scipy.fftpack.fft(A)
             else:
-                return ifftshift(np.fft.fft(fftshift(A)))
+                return ifftshift(scipy.fftpack.fft(fftshift(A)))
             
 
     #-----------------------------------------------------------------------
