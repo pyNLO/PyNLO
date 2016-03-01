@@ -56,3 +56,4 @@ ax = fig.add_subplot(111, projection='3d')
 ax.plot(a.out.ysave[:a.out.count, 0],
            a.out.ysave[:a.out.count, 1],
            a.out.ysave[:a.out.count, 2]) 
+plt.show()
