@@ -21,7 +21,7 @@ This file is part of pyNLO.
 ###     Global variables    ###
 #   USE_PYFFTW : True   - > use pyfftw
 #                False  - > use numpy fft
-USE_PYFFTW = False
+USE_PYFFTW = True
 #   USE_FREQUENCY_DOMAIN_RAMAN : 
 #   True   - > calculate Raman respose in frequency domain (older)
 #   False  - > calculate Raman reponse in time domain (Modern version)

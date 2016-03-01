@@ -50,7 +50,7 @@ signal_in = GaussianPulse(power                 = signal_power,
                           NPTS                  = 2**10, 
                           frep_MHz              = fr, 
                           power_is_avg          = True)
-signal_in.add_time_offset(+0.250)
+signal_in.add_time_offset(+0.450)
 twind   = signal_in.time_window_ps
 npoints = signal_in.NPTS
 
@@ -121,7 +121,8 @@ res = integrand.process_stepper_output(a.out)
 #print "idler power in: ",   idler_power_in, "mW"
 #print "pump power out: ",   pump_power_out, "mW"
 #print "signal power out: ", signal_power_out, "mW"
-#print "idler power out: ",  idler_power_out, "mW"
+p = res.get_idlr(n_saves-1)
+print "idler power out: ",  p.calc_epp()*p.frep_mks*1e3  , "mW"
 #
 #print "Total power before: ",np.sum(np.abs(pump_out[:,0])**2)+\
 #                            np.sum(np.abs(sgnl_out[:,0])**2)+\
