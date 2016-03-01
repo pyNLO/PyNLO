@@ -153,7 +153,7 @@ class FiberInstance:
             return np.zeros((pulse.NPTS,))
 
     def Beta2_to_D(self, pulse): # in ps / nm / km
-        """ This provides the dispersion parameter D (in ps / nm / km) at each frequency of the suppied pulse"""
+        """ This provides the dispersion parameter D (in ps / nm / km) at each frequency of the supplied pulse"""
         return -2 * np.pi * self.c / pulse.wl_nm**2 * self.Beta2(pulse) * 1000
     def Beta2(self, pulse):
         """ This provides the beta_2 (in ps^2 / meter)."""
