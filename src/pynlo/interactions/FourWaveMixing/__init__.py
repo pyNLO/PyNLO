@@ -24,5 +24,4 @@
 
 
 from pynlo.interactions.FourWaveMixing import SSFM
-from . import getGainsForGNLSE
 from . import SSFM
