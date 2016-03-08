@@ -24,3 +24,4 @@
 
 
 from pynlo.interactions.FourWaveMixing import SSFM
+from . import SSFM

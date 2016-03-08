@@ -20,3 +20,6 @@
 #-----------------------------------------------------------------------
 # Evolution of the pulse through the material
 #-----------------------------------------------------------------------
+
+from . import FourWaveMixing
+from . import ThreeWaveMixing
