@@ -69,7 +69,7 @@ class FiberInstance:
         self.load_dispersion()
     
     def load_from_file(self, filename, length=0.1, fiberName=None, gamma_W_m=0, gain=0,
-                       alpha=0, delimiter=',', skiprows=0, poly_order=20):
+                       alpha=0, delimiter=',', skiprows=0, poly_order=3):
         """
         This loads dispersion give the path of a file. 
         The file is expected to be in the format
