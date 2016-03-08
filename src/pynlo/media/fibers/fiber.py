@@ -50,7 +50,7 @@ class FiberInstance:
     betas       = None
     length      = None
     fibertype   = None
-    fiberspecs  = None
+    fiberspecs  = {}
     poly_order  = None
     gamma       = None
     def __init__(self):
@@ -67,7 +67,36 @@ class FiberInstance:
         self.gamma = self.fiberspecs["gamma"]
         self.poly_order = poly_order
         self.load_dispersion()
+    
+    def load_from_file(self, filename, length=0.1, fiberName=None, gamma_W_m=0, gain=0,
+                       alpha=0, delimiter=',', skiprows=0, poly_order=20):
+        """
+        This loads dispersion give the path of a file. 
+        The file is expected to be in the format
+        wavelength (nm), D (ps/nm/km).
+        """
+        import os
+        
+        if fiberName == None:
+            self.fibertype = os.path.basename(filename)
+        else:
+            self.sibertype = fiberName
+        
+        self.fiberspecs["dispersion_format"] = "D"
+        self.poly_order = poly_order
+        self.gain       = gain
+        self.length     = length
+        self.gamma      = gamma_W_m
+        
+        if gain == 0:
+            self.fiberspecs["is_gain"] = False
+        else:
+            self.fiberspecs["is_gain"] = True
 
+        self.fiberspecs['gain_x_data' ] = None
+        
+        self.x, self.y = np.loadtxt(filename, delimiter=delimiter, skiprows=skiprows, unpack=True)
+            
     def load_dispersion(self):
         """This is typically called by the "load_from_db" function. 
         It takes the values from the self.fiberspecs dict and transfers them into the appropriate variables. """
