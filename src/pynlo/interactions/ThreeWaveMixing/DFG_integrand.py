@@ -16,7 +16,6 @@ Authors: Dan Maser, Gabe Ycas
 
 import numpy as np
 import scipy.fftpack as fftpack
-import pyfftw
 from copy import deepcopy
 from scipy import constants
 from pynlo.light import OneDBeam
@@ -24,6 +23,12 @@ import exceptions
 from pynlo.light.DerivedPulses import NoisePulse
 from pynlo.light.PulseBase import Pulse
 from matplotlib import pyplot as plt
+
+try:
+    import pyfftw
+    PYFFTW_AVAILABLE=True
+except:
+    PYFFTW_AVAILABLE=False
 
 
 class dfg_problem:     
