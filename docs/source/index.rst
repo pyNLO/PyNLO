@@ -10,13 +10,10 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-
-=======
-
-Welcome to pyNLO's documentation!
-=================================
-
-.. include:: contents.rst.inc
+   
+   general
+   pynlo
+   examples
 
 
 Indices and tables
