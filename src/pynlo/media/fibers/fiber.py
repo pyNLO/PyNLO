@@ -80,7 +80,7 @@ class FiberInstance:
         if fiberName == None:
             self.fibertype = os.path.basename(filename)
         else:
-            self.sibertype = fiberName
+            self.fibertype = fiberName
         
         self.fiberspecs["dispersion_format"] = "D"
         self.poly_order = poly_order
