@@ -168,9 +168,9 @@ class FiberInstance:
             # now we have beta calculated in terms of distance from the fiber central frequency
             # what we want is to have beta referenced from the *pulse* central frequency
                 
-            center_index = np.argmin(np.abs(pulse.W_THz - 2*np.pi*pulse.center_frequency_THz))
+            center_index = np.argmin(np.abs(pulse.V_THz))
             slope = np.gradient(B)/np.gradient(pulse.W_THz)
-            B = B - slope[center_index] * (pulse.W_THz - 2*np.pi*pulse.center_frequency_THz) - B[center_index]
+            B = B - slope[center_index] * (pulse.V_THz) - B[center_index]
             
             return B
             
