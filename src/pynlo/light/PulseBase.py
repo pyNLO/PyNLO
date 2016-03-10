@@ -793,3 +793,91 @@ class Pulse:
         
         # Write pulse data file
         np.savetxt(self.fileloc, np.vstack((wavel_data, inten_data, phase_data)).T) 
+    
+    def spectrogram(self, gate_function_width_ps=0.050, time_steps=500):
+        """
+        This calculates a spectrogram, essentially showing the spectrum
+        as a funcition of time delay. See Dudley Fig. 10, on p1153 for a description
+        of the spectrogram in the context of supercontinuum generaiton. 
+        (http://dx.doi.org/10.1103/RevModPhys.78.1135)
+        
+        
+        Parameters
+        ----------
+        
+        gate_function_width : float
+            the width of the gate function in seconds. Typically something like 
+            0.050 ps (50 fs) is used
+        
+        time_steps : int
+            the number of delay time steps to use. More steps makes a higher 
+            resolution spectrogram, but takes longer to process and plots.
+            ~500 seems about right.
+        
+        
+        Returns
+        -------
+        DELAYS : 2D numpy meshgrid 
+            the columns have increasing delay (in ps)
+        FREQS : 2D numpy meshgrid
+            the rows have increasing frequency (in THz)
+        spectrogram : 2D numpy array
+            Following the convention of Dudley, the frequency runs along the y-axis
+            (axis 0) and the time runs alon the x-axis (axis 1)
+        
+        
+        Example
+        -------
+        
+        The spectrogram can be visualized using something like this: ::
+        
+            plt.figure()
+            DELAYS, FREQS, extent, spectrogram = pulse.spectrogram()
+            plt.imshow(spectrogram, aspect='auto', extent=extent)
+            plt.xlabel('Time (ps)')
+            plt.ylabel('Frequency (THz)')
+            plt.tight_layout
+    
+            plt.show()
+        
+        output:
+        
+        .. image:: https://cloud.githubusercontent.com/assets/1107796/13677657/25075ea4-e6a8-11e5-98b4-7813fa9a6425.png
+           :width: 500px
+           :alt: example_result
+            
+    
+        """
+
+        def gauss(x, A=1, mu=0, sigma=1): # gaussian function
+            return A*np.exp(-(x-mu)**2/(2.*sigma**2))
+            
+        t = self.T_ps # working in ps
+        
+        delay = np.linspace(np.min(t), np.max(t), time_steps)
+        D, T = np.meshgrid(delay, t)
+        D, AT = np.meshgrid(delay, self.AT)
+        
+        
+        phase = np.unwrap(np.angle(AT))
+        amp   = np.abs(AT)
+        
+        # make a 2D array of E(time, delay)
+        E = amp * np.cos(2*np.pi * T * self.center_frequency_THz + phase) * \
+            gauss(T, mu=D, sigma=gate_function_width_ps) # gate function
+        
+        spectrogram = np.fft.fft(E, axis=0)
+        freqs = np.fft.fftfreq(np.shape(E)[0], t[1]-t[0])
+        
+        DELAYS, FREQS = np.meshgrid(delay, freqs)
+        
+        # just take positive frequencies:
+        h = np.shape(spectrogram)[0]
+        spectrogram = spectrogram[:h/2]
+        DELAYS      = DELAYS[:h/2]
+        FREQS       = FREQS[:h/2]
+                
+        # calculate the extent to make it easy to plot:
+        extent = (np.min(DELAYS), np.max(DELAYS), np.min(FREQS), np.max(FREQS))
+        
+        return DELAYS, FREQS, extent, np.abs(spectrogram)
