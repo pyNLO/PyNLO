@@ -50,8 +50,8 @@ class SSFM:
         self.disable_self_steepening = disable_self_steepening
         self.USE_SIMPLE_RAMAN = USE_SIMPLE_RAMAN
 
-        # Raman fraction; may change depending upon which calculation method is
-        # used 
+        # Raman fraction; may change depending upon which calculation method 
+        # is used 
         self.f_R = f_R
         # The value for the old-style Raman response
         self.f_R0 = f_R0
@@ -163,22 +163,24 @@ class SSFM:
 
         self.A_I[:] = 0.0        
         self.A2[:]  = 0.0
-        self.Af[:] = 0.0
-        self.Ac[:] = 0.0
-        self.A[:] = 0.0
-        self.R[:] = 0.0
-        self.R0[:] = 0.0
+        self.Af[:]  = 0.0
+        self.Ac[:]  = 0.0
+        self.A[:]   = 0.0
+        self.R[:]   = 0.0
+        self.R0[:]  = 0.0
         
-        self.omegas[:]      =  pulse_in.V_THz
-        self.betas[:]       =  fiber.get_betas(pulse_in)
-        self.alpha[:]       = -fiber.get_gain(pulse_in, output_power)
-        self.gamma          = fiber.gamma
-        self.w0             = pulse_in.center_frequency_THz * 2.0 * np.pi
+        self.omegas[:] =  pulse_in.V_THz
+        self.betas[:]  =  fiber.get_betas(pulse_in)
+        self.alpha[:]  = -fiber.get_gain(pulse_in, output_power)
+        self.gamma     =  fiber.gamma
+        self.w0        =  pulse_in.center_frequency_THz * 2.0 * np.pi
 
-        self.last_h = None      
+        self.last_h    =  None      
 
         if not self.disable_Raman:
+            
             self.CalculateRamanResponseFT(pulse_in)
+            
             if raman_plots:
                 plt.subplot(221)
                 plt.plot(self.omegas/(2*np.pi), np.abs(self.R - (1-self.f_R)),'bo')                
@@ -204,6 +206,7 @@ class SSFM:
                 plt.title('Abs[A[w]]')
                 plt.xlabel('THz')
                 plt.show()
+                
         # Load up parameters
         self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
         self.omegas[:]  = self.conditional_fftshift(self.omegas)
@@ -213,16 +216,20 @@ class SSFM:
         self.R0[:]      = self.conditional_fftshift(self.R0)
         print 'pulse energy in ',np.sum(abs(pulse_in.AT))
         print 'copied as  ',np.sum(abs(self.A))
+        
     #-----------------------------------------------------------------------
     # Calculates the Fourier Transform of R(T). See pg 49 of G. P. Agrawal's 
     # "Nonlinear fiber optics"  for details 
     #-----------------------------------------------------------------------
     def CalculateRamanResponseFT(self, pulse):
-        ''' Calculate Raman response in frequency domain. Two versions are
-            available: the first is the LaserFOAM one, which directly calculates
-            R[w]. The second is Dudley-style, which calculates R[t] and then
-            FFTs. Note that the use of fftshifts is critical here (FFT_t_shift)
-            as is the factor of pulse_width.'''
+        """
+        Calculate Raman response in frequency domain. Two versions are
+        available: the first is the LaserFOAM one, which directly calculates
+        R[w]. The second is Dudley-style, which calculates R[t] and then
+        FFTs. Note that the use of fftshifts is critical here (FFT_t_shift)
+        as is the factor of pulse_width.
+        """
+        
         # Laserfoam raman function.
         TAU1 = self.tau_1
         TAU2 = self.tau_2
@@ -420,6 +427,15 @@ class SSFM:
         self.exp_D[:] = np.exp(direction*h*0.5*(1j*self.betas-self.alpha/2.0))
 
     def propagate(self, pulse_in, fiber, n_steps, output_power = None):
+        """
+        This is the main user-facing function that allows a pulse to be 
+        propagated along a fiber (or other nonlinear medium). 
+        
+        Parameters
+        ----------
+        
+        pulse_in : pulse object
+            this is an instance of the :class:`pynlo.light.PulseBase.Pulse` class."""
 
         n_steps = int(n_steps)
         
