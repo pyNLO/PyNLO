@@ -118,7 +118,34 @@ class FiberInstance:
             return None
     def get_betas(self,pulse):
         """This provides the propagation constant (beta) at the frequencies of the supplied pulse grid.
-        The units are 1/meters """
+        The units are 1/meters. 
+        
+        Two different methods are used, 
+        
+        If fiberspecs["dispersion_format"] == "D", then the DTabulationToBetas function is used to
+        fit the datapoints in terms of the Beta2, Beta3, etc. coefficients expanded around the pulse 
+        central frequency. 
+        
+        If fiberspecs["dispersion_format"] == "GVD", then the betas are calculated as a Taylor expansion
+        using the Beta2, Beta3, etc. coefficients around the *fiber* central frequency. 
+        However, since this expansion is done without the lower order coefficients, the first two 
+        terms of the Taylor expansion are not defined. In order to provide a nice input for the SSFM,
+        which assumes that the group velocity will be zero at the pulse central frequency,
+        the slope and offset at the pump central frequency are set to zero. 
+        
+        Parameters
+        ----------
+        pulse : an instance of the :class:`pynlo.light.pulse.PulseBase` class
+            the pulse must be supplied in order for the frequency grid to be known
+        
+        
+        Returns
+        -------
+        B : 1D array of floats
+            the propagation constant (beta) at the frequency gridpoints of the supplied pulse
+            (units of 1/meters).
+        
+        """
         B = np.zeros((pulse.NPTS,))
         if self.fiberspecs["dispersion_format"] == "D":
             self.betas = DTabulationToBetas(pulse.center_wavelength_nm,
@@ -137,7 +164,16 @@ class FiberInstance:
             for i in range(len(betas)):
                 betas[i] = betas[i]
                 B = B + betas[i] / factorial(i + 2) * (pulse.W_THz-fiber_omega0)**(i + 2)
+            
+            # now we have beta calculated in terms of distance from the fiber central frequency
+            # what we want is to have beta referenced from the *pulse* central frequency
+                
+            center_index = np.argmin(np.abs(pulse.W_THz - 2*np.pi*pulse.center_frequency_THz))
+            slope = np.gradient(B)/np.gradient(pulse.W_THz)
+            B = B - slope[center_index] * (pulse.W_THz - 2*np.pi*pulse.center_frequency_THz) - B[center_index]
+            
             return B
+            
         else:
             return -1
     def get_gain(self,pulse,output_power = 1):
