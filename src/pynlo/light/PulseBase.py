@@ -145,9 +145,12 @@ class Pulse:
             self._cache_W_Hz_hash = self.cache_hash
             self._cache_W_Hz                 =  self._W * 1e12
             return self._cache_W_Hz
-            
+    def _get_F_Hz(self):
+        return self._get_W_Hz() / (2.0*np.pi)            
     def _get_W_THz(self):
         return self._W
+    def _get_F_THz(self):
+        return self._W / (2.0*np.pi)
     def _get_dT_seconds(self):
         return self._dT * 1e-12
     def _get_dT_picoseconds(self):
@@ -234,6 +237,15 @@ class Pulse:
         Angular frequency grid corresponding to AW [THz]
     """
 
+    F_THz           = property(_get_F_THz)
+    """ Property: frequency grid 
+        
+    Returns
+    -------
+    F_THz : ndarray, shape NPTS
+        Frequency grid corresponding to AW [THz]
+    """
+
     dT_ps           = property(_get_dT_picoseconds)
     """    
     Property: time grid spacing
@@ -309,6 +321,15 @@ class Pulse:
     W_mks : ndarray, shape NPTS
         Angular frequency grid corresponding to AW [Hz]
     """    
+    F_mks           = property(_get_F_Hz)
+    """ Property: frequency grid 
+        
+    Returns
+    -------
+    F_mks : ndarray, shape NPTS
+        Frequency grid corresponding to AW [Hz]
+    """    
+
     dT_mks          = property(_get_dT_seconds)
     """    
     Property: time grid spacing
