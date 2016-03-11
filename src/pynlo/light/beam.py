@@ -46,11 +46,14 @@ class OneDBeam:
         self.set_w0( waist_meters )
 
     def calc_confocal(self, n_s = 1.0):
-        return (2.0*np.pi) * self.waist**2 * (n_s/self._lambda0)    
+        return (2.0*np.pi) * self.waist**2 * (n_s/self._lambda0)  
+      
     def set_w0(self, w0):
         self._w0 = w0
+        
     def _get_w0(self):
         return self._w0
+        
     waist  = property(_get_w0)
     
     def calculate_waist(self, z, n_s = 1.0):
@@ -59,14 +62,17 @@ class OneDBeam:
                 w(z) = w0 (1+ ( 2z/b)**2 )**1/2 """
         b = self.calc_confocal(n_s)
         return self.waist * np.sqrt(1. + ( 2.0* z / b)**2 )
+        
     def calculate_zR(self, n_s = 1.0):
         """ Calculate Rayleigh range, accounting for index of refraction. """
         return self.calc_confocal(n_s) / 2.0
+        
     def calculate_R(self, z, n_s = 1.0):
         """ Calculate beam curvature. :
             R(z) = z * [ 1 +  (z_R/ z)**2 ]"""
         z_r = self.calculate_zR(n_s)
         return z * (1 + (z_r/z)**2)
+        
     def calculate_gouy_phase(self, z, n_s):
         """ Return the Gouy phase shift due to focusing a distance z in a crystal,
             where it is assumed that the focus is at crystal_length / 2.0. Return
@@ -74,22 +80,26 @@ class OneDBeam:
         z_r      = self.calculate_zR(n_s)
         psi_gouy = np.arctan2(z, z_r )
         return np.exp(1j*psi_gouy)
+        
     def _rtP_to_a(self, n_s, z, waist = None):
         """ Calculate conversion constant from electric field to average power from
             indices of refraction: A = P_to_a * rtP """
         if waist is None:
             waist = self.calculate_waist(z, n_s)
         return 1.0 / np.sqrt( np.pi * waist**2 * n_s * \
-                        constants.epsilon_0 * constants.speed_of_light)    
+                        constants.epsilon_0 * constants.speed_of_light)   
+                         
     def rtP_to_a(self, n_s, z = None):
         """ Calculate conversion constant from electric field to average power from
             pulse and crystal class instances: A ** 2 = rtP_to_a**2 * P """
         return self._rtP_to_a(n_s, z, self.waist)
+        
     def rtP_to_a_2(self, pulse_instance, crystal_instance, z = None, waist = None):
         """ Calculate conversion constant from electric field to average power from
             pulse and crystal class instances: A ** 2 = rtP_to_a**2 * P """
         n_s = self.get_n_in_crystal(pulse_instance, crystal_instance)
         return self._rtP_to_a(n_s, z, waist)
+        
     def calc_overlap_integral(self, z, this_pulse, othr_pulse, othr_beam,\
                                    crystal_instance, reverse_order = False):
         """ Calculate overlap integral (field-square) between this beam and  Beam instance
@@ -106,6 +116,7 @@ class OneDBeam:
         #return (2*w2*w2/(w1**2+w2**2))**2
         # Expression below accounts for curvature:       
         return  (4*k1*k2*zr1*zr2)/(k2**2*(z**2 + zr1**2) - 2*k1*k2*(z**2 - zr1*zr2) + k1**2*(z**2 + zr2**2))
+        
     def set_waist_to_match_confocal(self, this_pulse, othr_pulse, othr_beam,\
                                    crystal_instance):
         """ Calculate waist w0 for a beam match confocal parameters with othr_beam """
@@ -115,6 +126,7 @@ class OneDBeam:
         zr = othr_beam.calculate_zR(n2)  
         w0 = np.sqrt( 2.0*zr*self._lambda0/(2.0*np.pi*n1))
         self.waist = w0
+        
     def set_waist_to_match_central_waist(self, this_pulse,w0_center,crystal_instance):
         """ Calculate waist w0 for a beam match so that all confocal parameters
             are equal while matching waist w0_center at center color of this beam  """
@@ -123,6 +135,7 @@ class OneDBeam:
         zr = (np.pi) * w0_center**2 * (n1[len(n1)>>1]/self._lambda0[len(self._lambda0)>>1])
         w0 = np.sqrt( 2*zr*self._lambda0/(2.0*np.pi*n1))
         self.waist = w0
+        
     def calc_optimal_beam_overlap_in_crystal(self, this_pulse, othr_pulse, othr_beam,\
                                    crystal_instance, L = None):
         """ Calculate waist w0 for a beam to maximuze the integral (field-square) 
