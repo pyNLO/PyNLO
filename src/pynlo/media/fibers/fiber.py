@@ -137,20 +137,33 @@ class FiberInstance:
         
         Notes
         -----
-        For example, a user could create a simple fiber with increasing Beta2 and Beta4: ::
+        For example, this code will create a fiber where Beta2 changes from anomalous
+        to zero along the fiber: ::
         
-        def myDispersion(z):
-            beta2 = z * 0.1
-            beta3 = 0
-            beta4 = z 0.0001
-            return (beta2, beta3, beta4)
+            Length = 1.5 
+            
+            def myDispersion(z):
+                
+                frac = 1 - z/(Length)
+                
+                beta2 = frac * -50e-3
+                beta3 = 0
+                beta4 = 1e-7
+    
+                return beta2, beta3, beta4
+
         
-        fiber.set_dispersion_function(myDisperion, format='GVD')
+        fiber1 = fiber.FiberInstance()
+        fiber1.generate_fiber(Length, center_wl_nm=800, betas=myDispersion(0), gamma_W_m=1)
+        
+        
+        fiber.set_dispersion_function(myDisperion, dispersion_format='GVD')
         """
         
         self.dispersion_changes_with_z = True
         self.fiberspecs["dispersion_format"] = dispersion_format
         self.dispersion_function = dispersion_function
+        
         
     def get_betas(self, pulse, z=0):
         """This provides the propagation constant (beta) at the frequencies of the supplied pulse grid.

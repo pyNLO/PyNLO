@@ -40,6 +40,9 @@ class SSFM:
                  disable_Raman = False, disable_self_steepening = False,
                  suppress_iteration = True, USE_SIMPLE_RAMAN = False,
                  f_R = 0.18, f_R0 = 0.18, tau_1 = 0.0122, tau_2 = 0.0320):
+        """
+        This initialization function sets up the parameters of the SSFM.
+        """
         self.iter = 0
         self.last_h = -1.0
         self.last_dir = 0.0
@@ -446,7 +449,11 @@ class SSFM:
         ----------
         
         pulse_in : pulse object
-            this is an instance of the :class:`pynlo.light.PulseBase.Pulse` class."""
+            this is an instance of the :class:`pynlo.light.PulseBase.Pulse` class.
+        fiber : fiber object
+            this is an instance of the :class:`pynlo.media.fiber.FiberInstance` class.
+        
+        """
 
         n_steps = int(n_steps)
         
@@ -491,12 +498,14 @@ class SSFM:
         
     def propagate_to_gain_goal(self, pulse_in, fiber, n_steps, power_goal = 1,
                               scalefactor_guess = None, powertol = 0.05):
-        """Integrate over length of gain fiber such that the average output
-            poweris power_goal [W]. For this to work, fiber must have spectroscopic
-            gain data from an amplifier model or measurement. If the approximate
-            scalefactor needed to adjust the gain is known it can be passed as
-            scalefactor_guess.\n This function returns a tuple of tuples:\n
-            ((ys,AWs,ATs,pulse_out), scale_factor)"""   
+        """
+        Integrate over length of gain fiber such that the average output
+        power is power_goal [W]. For this to work, fiber must have spectroscopic
+        gain data from an amplifier model or measurement. If the approximate
+        scalefactor needed to adjust the gain is known it can be passed as
+        scalefactor_guess.\n This function returns a tuple of tuples:\n
+        ((ys,AWs,ATs,pulse_out), scale_factor)
+        """   
         if scalefactor_guess is not None:
                 scalefactor = scalefactor_guess
         else:
