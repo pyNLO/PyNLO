@@ -58,6 +58,9 @@ class FiberInstance:
         self.c = constants.speed_of_light * 1e9/1e12 # c in nm/ps
         self.is_simple_fiber = False
         self.fiberloader = JSONFiberLoader.JSONFiberLoader('nist_fibers')
+        self.dispersion_changes_with_z = False
+        
+        
     def load_from_db(self, length, fibertype, poly_order = 2):
         """This loads a fiber from the database. """
         self.fibertype = fibertype
@@ -116,7 +119,40 @@ class FiberInstance:
         else:
             print "Error: no dispersion found."
             return None
-    def get_betas(self,pulse):
+    
+    def set_dispersion_function(self, dispersion_function, dispersion_format='GVD'):
+        """
+        This allows the user to provide a function for the fiber dispersion that can vary as a function
+        of `z`, the lenght along the fiber. The function can either provide beta2, beta3, beta4, etc. 
+        coefficients, or provide two arrays, wavelength (nm) and D (ps/nm/km)
+        
+        Parameters
+        ----------
+        dispersion_function : function 
+            returning D or Beta coefficients as a function of z
+        dispersion_formats: 'GVD' or 'D'
+            determines if the dispersion will be identified in terms of Beta coefficients 
+            (GVD, in units of ps^2/m, not ps^2/km) or
+            D (ps/nm/km)
+        
+        Notes
+        -----
+        For example, a user could create a simple fiber with increasing Beta2 and Beta4: ::
+        
+        def myDispersion(z):
+            beta2 = z * 0.1
+            beta3 = 0
+            beta4 = z 0.0001
+            return (beta2, beta3, beta4)
+        
+        fiber.set_dispersion_function(myDisperion, format='GVD')
+        """
+        
+        self.dispersion_changes_with_z = True
+        self.fiberspecs["dispersion_format"] = dispersion_format
+        self.dispersion_function = dispersion_function
+        
+    def get_betas(self, pulse, z=0):
         """This provides the propagation constant (beta) at the frequencies of the supplied pulse grid.
         The units are 1/meters. 
         
@@ -146,6 +182,13 @@ class FiberInstance:
             (units of 1/meters).
         
         """
+        
+        if self.dispersion_changes_with_z:
+            if self.fiberspecs["dispersion_format"] == "D":
+                self.x, self.y = self.dispersion_function(z)
+            if self.fiberspecs["dispersion_format"] == "GVD":
+                self.betas     = np.array(self.dispersion_function(z))
+            
         B = np.zeros((pulse.NPTS,))
         if self.fiberspecs["dispersion_format"] == "D":
             self.betas = DTabulationToBetas(pulse.center_wavelength_nm,
@@ -155,6 +198,7 @@ class FiberInstance:
             for i in range(len(self.betas)):
                 B = B + self.betas[i]/factorial(i+2)*pulse.V_THz**(i+2)
             return B
+            
         elif self.fiberspecs["dispersion_format"] == "GVD":
             # calculate beta[n]/n! * (w-w0)^n
             # w0 is the center of the Taylor expansion, and is defined by the

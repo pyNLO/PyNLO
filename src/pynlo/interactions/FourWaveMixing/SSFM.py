@@ -63,6 +63,18 @@ class SSFM:
         self.suppress_iteration = suppress_iteration
 
 
+    def load_fiber_parameters(self, pulse_in, fiber, output_power, z=0):
+        """
+        This funciton loads the fiber parameters into class variables.
+        """
+        self.betas[:]  =  fiber.get_betas(pulse_in, z=z)
+        # self.alpha[:]  = -fiber.get_gain(pulse_in, output_power) # currently alpha cannot change with z
+        # self.gamma     =  fiber.gamma # currently gamma cannot change as a function of z
+        
+        self.betas[:]  = self.conditional_fftshift(self.betas)
+        # self.alpha[:]   = self.conditional_fftshift(self.alpha)
+        
+
 
     def setup_fftw(self, pulse_in, fiber, output_power, raman_plots = False):
         ''' Call immediately before starting Propagate. This function does two
@@ -170,8 +182,7 @@ class SSFM:
         self.R0[:]  = 0.0
         
         self.omegas[:] =  pulse_in.V_THz
-        self.betas[:]  =  fiber.get_betas(pulse_in)
-        self.alpha[:]  = -fiber.get_gain(pulse_in, output_power)
+        self.alpha[:]  = -fiber.get_gain(pulse_in, output_power) 
         self.gamma     =  fiber.gamma
         self.w0        =  pulse_in.center_frequency_THz * 2.0 * np.pi
 
@@ -210,7 +221,7 @@ class SSFM:
         # Load up parameters
         self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
         self.omegas[:]  = self.conditional_fftshift(self.omegas)
-        self.betas[:]   = self.conditional_fftshift(self.betas)
+        # self.betas[:]   = self.conditional_fftshift(self.betas)
         self.alpha[:]   = self.conditional_fftshift(self.alpha)
         self.R[:]       = self.conditional_fftshift(self.R)
         self.R0[:]      = self.conditional_fftshift(self.R0)
@@ -426,7 +437,7 @@ class SSFM:
     def Calculate_expD(self,h,direction):        
         self.exp_D[:] = np.exp(direction*h*0.5*(1j*self.betas-self.alpha/2.0))
 
-    def propagate(self, pulse_in, fiber, n_steps, output_power = None):
+    def propagate(self, pulse_in, fiber, n_steps, output_power=None, reload_fiber_each_step=False):
         """
         This is the main user-facing function that allows a pulse to be 
         propagated along a fiber (or other nonlinear medium). 
@@ -455,9 +466,15 @@ class SSFM:
         pulse_out = Pulse()        
         pulse_out.clone_pulse(pulse_in)
         self.setup_fftw(pulse_in, fiber, output_power)
+        self.load_fiber_parameters(pulse_in, fiber, output_power) 
+        
 
         for i in range(n_steps):                        
             print "Step:", i, "Distance remaining:", fiber.length * (1 - np.float(i)/n_steps)
+            
+            if reload_fiber_each_step:
+                self.load_fiber_parameters(pulse_in, fiber, output_power, z=i*delta_z) 
+            
             self.integrate_over_dz(delta_z)            
             AW[:,i] = self.conditional_ifftshift(self.FFT_t_2(self.A))
             AT[:,i] = self.conditional_ifftshift(self.A)
