@@ -56,7 +56,7 @@ fiber1.generate_fiber(Length * 1e-3, center_wl_nm=fibWL, betas=(beta2, beta3, be
                               gamma_W_m=Gamma * 1e-3, gvd_units='ps^n/km', gain=-alpha)
                                 
 # Propagation
-evol = pynlo.interactions.FourWaveMixing.SSFM.SSFM(local_error=0.001, USE_SIMPLE_RAMAN=True,
+evol = pynlo.interactions.FourWaveMixing.SSFM.SSFM(local_error=0.005, USE_SIMPLE_RAMAN=True,
                  disable_Raman              = np.logical_not(Raman), 
                  disable_self_steepening    = np.logical_not(Steep))
 
@@ -83,12 +83,12 @@ ax1.plot(pulse.T_ps,     dB(pulse.AT),  color = 'b')
 
 extent = (np.min(F[F > 0]), np.max(F[F > 0]), 0, Length)
 ax2.imshow(zW, extent=extent, 
-           vmin=np.max(zW) - 60.0, vmax=np.max(zW), 
+           vmin=np.max(zW) - 40.0, vmax=np.max(zW), 
            aspect='auto', origin='lower')
 
 extent = (np.min(pulse.T_ps), np.max(pulse.T_ps), np.min(y_mm), Length)
 ax3.imshow(zT, extent=extent, 
-           vmin=np.max(zT) - 60.0, vmax=np.max(zT), 
+           vmin=np.max(zT) - 40.0, vmax=np.max(zT), 
            aspect='auto', origin='lower')
           
 

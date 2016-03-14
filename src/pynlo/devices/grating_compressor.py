@@ -23,30 +23,31 @@ import exceptions
 
 class TreacyCompressor:
     """ Calculate effect of Treacy compressor. This is a calculator which
-        implements eqn 5b from Treacy's 1969 paper:
+        implements eqn 5b from Treacy's 1969 paper: ::
         
                                      -4 pi^2 c b 
         {1}  dt/dw =    -------------------------------------
                        w^3 d^2 (1- (2 pi c/ wd - sin gamma)^2)
+                       
 
         where gamma is the diffraction angle, w is the angular frequency, d is
-        the grating ruling period, and b is the slant distance between gratings,
+        the grating ruling period, and b is the slant distance between gratings, ::
         
         {1b} b = G sec(gamma - theta)
         
         where G is the grating separation and theta is the acute angle between
-        indicent and diffracted rays (text before eq 4). The grating equation
+        indicent and diffracted rays (text before eq 4). The grating equation ::
         relates the angles (generalized eq 3):
         
         {2} sin(gamma - theta) + sin(gamma) = m lambda / d
 
         More conventionally, the grating equation is cast in terms of the
-        incident and diffracted ray angles,
+        incident and diffracted ray angles, ::
         
         {3} sin(alpha) + sin(beta) = m lambda / d.
 
         It makes sense to solve {3} using the grating specifications (eg for
-        optimum incident angle a) and then derive Treacy's theta and gamma:
+        optimum incident angle a) and then derive Treacy's theta and gamma: ::
         
         {4} gamma = alpha                  theta = gamma - alpha
         
@@ -110,6 +111,8 @@ class TreacyCompressor:
         return 2.0 * self.calc_dt_dw_singlepass(wavelength_nm,
                                                  grating_separation_meters,
                                                  verbose = False)
+    
+    
     def calc_compressor_HOD(self, wavelength_nm, grating_separation_meters, dispersion_order):
         """ Calculate higher order dispersion by taking w - derivatives of
             dt/dw """        
@@ -124,6 +127,8 @@ class TreacyCompressor:
                                       n     = dispersion_order - 2,
                                       dx    = 2.0*np.pi*100.0e6, # Use dx = 100 MHz
                                       order = 101 ) # Why not use 101's order?
+    
+    
     def calc_compressor_dnphi_domega_n(self, wavelength_nm, grating_separation_meters, dispersion_order):
         """ Calculate higher order dispersion by taking w - derivatives of
             dt/dw """        
@@ -138,6 +143,8 @@ class TreacyCompressor:
                              polyorder = 7, deriv = dispersion_order)
         dw = (ws[1] - ws[0])*10**(-15*(1+dispersion_order))
         return y[50]/(dw**dispersion_order)
+    
+    
     def apply_phase_to_pulse(self, grating_separation_meters, pulse):
         """ Apply grating disersion (all orders) to a Pulse instance. Phase is
             computed by numerical integration of dphi/domega (from Treacy) """

@@ -879,12 +879,11 @@ class Pulse:
         D, T = np.meshgrid(delay, t)
         D, AT = np.meshgrid(delay, self.AT)
         
-        
         phase = np.unwrap(np.angle(AT))
         amp   = np.abs(AT)
         
         # make a 2D array of E(time, delay)
-        E = amp * np.cos(2*np.pi * T * self.center_frequency_THz + phase) * \
+        E = amp * np.cos(2 * np.pi * T * self.center_frequency_THz + phase) * \
             gauss(T, mu=D, sigma=gate_function_width_ps) # gate function
         
         spectrogram = np.fft.fft(E, axis=0)
