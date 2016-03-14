@@ -40,6 +40,9 @@ class SSFM:
                  disable_Raman = False, disable_self_steepening = False,
                  suppress_iteration = True, USE_SIMPLE_RAMAN = False,
                  f_R = 0.18, f_R0 = 0.18, tau_1 = 0.0122, tau_2 = 0.0320):
+        """
+        This initialization function sets up the parameters of the SSFM.
+        """
         self.iter = 0
         self.last_h = -1.0
         self.last_dir = 0.0
@@ -62,6 +65,18 @@ class SSFM:
         self.dz_min = 1e-12
         self.suppress_iteration = suppress_iteration
 
+
+    def load_fiber_parameters(self, pulse_in, fiber, output_power, z=0):
+        """
+        This funciton loads the fiber parameters into class variables.
+        """
+        self.betas[:]  =  fiber.get_betas(pulse_in, z=z)
+        # self.alpha[:]  = -fiber.get_gain(pulse_in, output_power) # currently alpha cannot change with z
+        # self.gamma     =  fiber.gamma # currently gamma cannot change as a function of z
+        
+        self.betas[:]  = self.conditional_fftshift(self.betas)
+        # self.alpha[:]   = self.conditional_fftshift(self.alpha)
+        
 
 
     def setup_fftw(self, pulse_in, fiber, output_power, raman_plots = False):
@@ -170,8 +185,7 @@ class SSFM:
         self.R0[:]  = 0.0
         
         self.omegas[:] =  pulse_in.V_THz
-        self.betas[:]  =  fiber.get_betas(pulse_in)
-        self.alpha[:]  = -fiber.get_gain(pulse_in, output_power)
+        self.alpha[:]  = -fiber.get_gain(pulse_in, output_power) 
         self.gamma     =  fiber.gamma
         self.w0        =  pulse_in.center_frequency_THz * 2.0 * np.pi
 
@@ -210,7 +224,7 @@ class SSFM:
         # Load up parameters
         self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
         self.omegas[:]  = self.conditional_fftshift(self.omegas)
-        self.betas[:]   = self.conditional_fftshift(self.betas)
+        # self.betas[:]   = self.conditional_fftshift(self.betas)
         self.alpha[:]   = self.conditional_fftshift(self.alpha)
         self.R[:]       = self.conditional_fftshift(self.R)
         self.R0[:]      = self.conditional_fftshift(self.R0)
@@ -426,7 +440,7 @@ class SSFM:
     def Calculate_expD(self,h,direction):        
         self.exp_D[:] = np.exp(direction*h*0.5*(1j*self.betas-self.alpha/2.0))
 
-    def propagate(self, pulse_in, fiber, n_steps, output_power = None):
+    def propagate(self, pulse_in, fiber, n_steps, output_power=None, reload_fiber_each_step=False):
         """
         This is the main user-facing function that allows a pulse to be 
         propagated along a fiber (or other nonlinear medium). 
@@ -435,7 +449,11 @@ class SSFM:
         ----------
         
         pulse_in : pulse object
-            this is an instance of the :class:`pynlo.light.PulseBase.Pulse` class."""
+            this is an instance of the :class:`pynlo.light.PulseBase.Pulse` class.
+        fiber : fiber object
+            this is an instance of the :class:`pynlo.media.fiber.FiberInstance` class.
+        
+        """
 
         n_steps = int(n_steps)
         
@@ -455,9 +473,15 @@ class SSFM:
         pulse_out = Pulse()        
         pulse_out.clone_pulse(pulse_in)
         self.setup_fftw(pulse_in, fiber, output_power)
+        self.load_fiber_parameters(pulse_in, fiber, output_power) 
+        
 
         for i in range(n_steps):                        
             print "Step:", i, "Distance remaining:", fiber.length * (1 - np.float(i)/n_steps)
+            
+            if reload_fiber_each_step:
+                self.load_fiber_parameters(pulse_in, fiber, output_power, z=i*delta_z) 
+            
             self.integrate_over_dz(delta_z)            
             AW[:,i] = self.conditional_ifftshift(self.FFT_t_2(self.A))
             AT[:,i] = self.conditional_ifftshift(self.A)
@@ -474,12 +498,14 @@ class SSFM:
         
     def propagate_to_gain_goal(self, pulse_in, fiber, n_steps, power_goal = 1,
                               scalefactor_guess = None, powertol = 0.05):
-        """Integrate over length of gain fiber such that the average output
-            poweris power_goal [W]. For this to work, fiber must have spectroscopic
-            gain data from an amplifier model or measurement. If the approximate
-            scalefactor needed to adjust the gain is known it can be passed as
-            scalefactor_guess.\n This function returns a tuple of tuples:\n
-            ((ys,AWs,ATs,pulse_out), scale_factor)"""   
+        """
+        Integrate over length of gain fiber such that the average output
+        power is power_goal [W]. For this to work, fiber must have spectroscopic
+        gain data from an amplifier model or measurement. If the approximate
+        scalefactor needed to adjust the gain is known it can be passed as
+        scalefactor_guess.\n This function returns a tuple of tuples:\n
+        ((ys,AWs,ATs,pulse_out), scale_factor)
+        """   
         if scalefactor_guess is not None:
                 scalefactor = scalefactor_guess
         else:

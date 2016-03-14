@@ -68,10 +68,8 @@ pynlo.interactions.FourWaveMixing
 This module implements the Split-step Fourier Method to solve the Generalized Nonlinear Schrodiner Equation and simulate the propagation of pulses in a Chi-3 nonlinear medium.
 
 .. autoclass:: pynlo.interactions.FourWaveMixing.SSFM.SSFM
-    :members:
-    :undoc-members:
-	:special-members:
-    :show-inheritance:
+	:members: __init__, propagate, propagate_to_gain_goal
+	:show-inheritance:
 	
 
 pynlo.interactions.ThreeWaveMixing
