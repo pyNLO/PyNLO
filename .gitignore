@@ -53,3 +53,4 @@ build/*
 # Setup tools directories
 pyNLO.egg-info/*
 src/pyNLO.egg-info/*
+dist/*

@@ -57,7 +57,7 @@ class FiberInstance:
         self.c_mks = constants.speed_of_light
         self.c = constants.speed_of_light * 1e9/1e12 # c in nm/ps
         self.is_simple_fiber = False
-        self.fiberloader = JSONFiberLoader.JSONFiberLoader('nist_fibers')
+        self.fiberloader = JSONFiberLoader.JSONFiberLoader('general_fibers')
         self.dispersion_changes_with_z = False
         
         
