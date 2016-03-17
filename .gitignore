@@ -54,3 +54,12 @@ build/*
 pyNLO.egg-info/*
 src/pyNLO.egg-info/*
 dist/*
+
+# we should generally ignore images, pdf files, etc. in case those get in somehow:
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+*.pdf
+*.doc
