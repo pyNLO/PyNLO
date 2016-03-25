@@ -80,7 +80,7 @@ class SincPulse(Pulse):
     def __init__(self, power, FWHM_ps, center_wavelength_nm,
                  time_window_ps = 10., frep_MHz = 100., NPTS = 2**10, 
                  GDD = 0, TOD = 0, chirp2 = 0, chirp3 = 0,
-                 power_is_avg = False, crop = 10):
+                 power_is_avg = False):
         """Generate sinc pulse A(t) = sin(t/T0)/(t/T0)
         centered at wavelength center_wavelength_nm (nm).
         time_window (ps) sets temporal grid size. Optional GDD and TOD are
