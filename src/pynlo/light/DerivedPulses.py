@@ -81,9 +81,11 @@ class SincPulse(Pulse):
                  time_window_ps = 10., frep_MHz = 100., NPTS = 2**10, 
                  GDD = 0, TOD = 0, chirp2 = 0, chirp3 = 0,
                  power_is_avg = False):
-        """Generate sinc pulse A(t) = sin(t/T0)/(t/T0)
+        """Generate sinc pulse A(t) = sqrt(peak_power[W]) * sin(t/T0)/(t/T0)
         centered at wavelength center_wavelength_nm (nm).
-        time_window (ps) sets temporal grid size. Optional GDD and TOD are
+        The width is given by FWHM_ps, which is the full-width-at-half-maximum 
+        in picoseconds. T0 is equal th FWHM/3.7909885.
+        time_window_ps sets temporal grid size. Optional GDD and TOD are
         in ps^2 and ps^3."""
         Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS)
         # make sure we weren't passed mks units        
@@ -107,7 +109,7 @@ class SincPulse(Pulse):
 class FROGPulse(Pulse):
     def __init__(self, time_window_ps, center_wavelength_nm, power,frep_MHz = 100., NPTS = 2**10,
                  power_is_avg = False,
-                 fileloc = 'O:\\OFM\\Maser\\FROG\\frog_141020-  7\\Speck.dat', # default EDFA spectrum
+                 fileloc = '',
                  flip_phase = True):
         """Generate pulse from FROG data. Grid is centered at wavelength
         center_wavelength_nm (nm), but pulse properties are loaded from data
