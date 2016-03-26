@@ -16,8 +16,7 @@ if not on_rtd:
           "nose-cov>=1.6",
           "nose-fixes>=1.3",
           "numpy>=1.9.2",          
-          "scipy>=0.15.1",
-          "unittest2>=1.0.1"
+          "scipy>=0.15.1"
           ]
 else:
     np = None
