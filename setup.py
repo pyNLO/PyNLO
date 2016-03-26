@@ -11,7 +11,6 @@ if not on_rtd:
     install_requires=[
           "jsonpickle>=0.9.2",
           "jsonschema>=2.5.1",
-          "lxml>=3.4.4",
           "mock>=1.0.1",
           "nose>=1.3.7",
           "nose-cov>=1.6",
