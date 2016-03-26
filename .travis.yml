@@ -32,4 +32,4 @@ before_install:
   - ./miniconda.sh -b -p /home/travis/mc
   - export PATH=/home/travis/mc/bin:$PATH
 script:
-  - python -m unittest discover src
+  - python -m unittest discover src -v "*test.py"
