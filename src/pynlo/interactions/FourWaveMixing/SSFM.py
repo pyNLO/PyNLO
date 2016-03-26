@@ -222,8 +222,8 @@ class SSFM:
             plt.show()
                 
         # Load up parameters
-        # self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
-        self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=False)
+        self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
+        #self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=False)
         
         self.omegas[:]  = self.conditional_fftshift(self.omegas)
         # self.betas[:]   = self.conditional_fftshift(self.betas)
@@ -660,7 +660,7 @@ class SSFM:
                 chksum = np.sum(abs(x))
             x[:] = ifftshift(x)
             if verify == True:
-                assert chksum == np.sum(abs(x))
+                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps
             return x
         else:
             return x
@@ -670,7 +670,7 @@ class SSFM:
                 chksum = np.sum(abs(x))
             x[:] = fftshift(x)
             if verify == True:
-                assert chksum == np.sum(abs(x))
+                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps
             return x
         else:
             return x            
