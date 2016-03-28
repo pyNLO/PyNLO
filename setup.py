@@ -16,8 +16,7 @@ if not on_rtd:
           "nose>=1.3.7",
           "nose-cov>=1.6",
           "nose-fixes>=1.3",
-          "numpy>=1.9.2",
-          "pyFFTW>=0.9.0",
+          "numpy>=1.9.2",          
           "scipy>=0.15.1",
           "unittest2>=1.0.1"
           ]
@@ -31,7 +30,7 @@ setup(name='pyNLO',
       description='Python nonlinear optics',
       author='Gabe Ycas',
       author_email='ycasg@colorado.edu',
-      url='https://github.com/ycasg/PyNLO',
+      url='https://github.com/pyNLO/PyNLO',
       install_requires=install_requires,
       packages=['pynlo',
                 'pynlo.devices',
@@ -46,4 +45,7 @@ setup(name='pyNLO',
                 'pynlo.util.ode_solve'],
       package_dir = {'': 'src'},
       package_data = {'pynlo': ['media/fibers/*.txt']},
+    extras_require = {
+        'DFG':  ["pyfftw"],
+		},	  
      )
