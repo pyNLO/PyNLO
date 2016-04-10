@@ -586,44 +586,7 @@ class Pulse:
         # Internally, the time window is used to determine the grids. Calculate
         # the time window size as  1 / dF = 1 / (DF / N)
         T = self._n / float(DF)
-        self._set_time_window(T * 1e12)            
-
-# Depricated, to be removed:
-#    def set_units(self, external_units):
-#        if external_units == 'nmps':
-#            self.external_c = self._c_nmps
-#            self._external_units = external_units                    
-#        elif external_units == 'mks':
-#            self.external_c = self._c_mks
-#            self._external_units = external_units        
-#        else:
-#            exceptions.ValueError('Unit type ',external_units,' is not known. Valid values are nmps and mks.')            
-#    def internal_time_from_ps(self, time, power = 1):        
-#        """ Convert to internal units of ps"""
-#        if self._ext_units_nmps():
-#            return time
-#        if self._ext_units_mks():
-#            return time * (1e-12)**power
-#    def internal_time_to_ps(self, time, power = 1):
-#        """ Convert from internal units of ps to external time """
-#        if self._ext_units_nmps():
-#            return time
-#        if self._ext_units_mks():
-#            return time * (1e12)**power                    
-#            
-#    def internal_wl_from_nm(self, wl):
-#        """ Convert to internal units of nm """
-#        if self._ext_units_nmps():
-#            return wl
-#        if self._ext_units_mks():
-#            return wl * 1e-9
-#    def internal_wl_to_nm(self, wl):
-#        """ Convert from internal units of nm to external units """
-#        if self._ext_units_nmps():
-#            return wl
-#        if self._ext_units_mks():
-#            return wl * 1e9
-                
+        self._set_time_window(T * 1e12)                            
 
     ####### Auxiliary public  functions     ###################################
     def calc_epp(self):
@@ -733,12 +696,33 @@ class Pulse:
         new_center_THz = self._c_nmps/new_center_wl_nm
         rotation = (self.center_frequency_THz-new_center_THz)/self.dF_THz
         self.set_AW(np.roll(self.AW, int(round(rotation))))
+    def interpolate_to_new_center_wl(self, new_wavelength_nm):
+        r""" Change grids by interpolating the electric field onto a new
+        frequency grid, defined by the new center wavelength and the current
+        pulse parameters. This is useful when grid overlaps must be avoided,
+        for example in difference or sum frequency generation.
+                
+        Parameters
+        ----------
+        new_wavelength_nm : float
+             New center wavelength [nm]
+        Returns
+        -------
+        Pulse instance        
+        """                
+        working_pulse = self.create_cloned_pulse()
+        working_pulse.set_center_wavelength_nm(new_wavelength_nm)
+        interpolator = interp1d(self.W_mks, self. AW,
+                                bounds_error = False,
+                                fill_value = 0.0)
+        working_pulse.set_AW(interpolator(working_pulse.W_mks))
+        return working_pulse
+        
     def filter_by_wavelength_nm(self, lower_wl_nm, upper_wl_nm):
         AW_new = self.AW
         AW_new[self.wl_nm < lower_wl_nm] = 0.0
         AW_new[self.wl_nm > upper_wl_nm] = 0.0
-        self.set_AW(AW_new)
-        
+        self.set_AW(AW_new)        
     def clone_pulse(self, p):
         '''Copy all parameters of pulse_instance into this one'''
         self.set_NPTS(p.NPTS)
