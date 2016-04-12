@@ -19,7 +19,7 @@ This file is part of pyNLO.
 """
 
 import numpy as np
-from scipy.interpolate import interp1d
+import scipy.interpolate
 from pynlo.media.fibers.calculators import DTabulationToBetas
 from scipy.misc import factorial
 from scipy import constants
@@ -103,12 +103,14 @@ class FiberInstance:
     def load_dispersion(self):
         """This is typically called by the "load_from_db" function. 
         It takes the values from the self.fiberspecs dict and transfers them into the appropriate variables. """
+        
         if self.fiberspecs["dispersion_format"] == "D":
             self.dispersion_x_units = self.fiberspecs["dispersion_x_units"]
             self.dispersion_y_units = self.fiberspecs["dispersion_y_units"]
             self.x = self.fiberspecs["dispersion_x_data"]
             self.y = self.fiberspecs["dispersion_y_data"]
             return 1
+            
         elif self.fiberspecs["dispersion_format"] == "GVD":
             self.dispersion_gvd_units = self.fiberspecs["dispersion_gvd_units"]
             self.center_wavelength = self.fiberspecs["dispersion_gvd_center_wavelength"]
@@ -123,17 +125,18 @@ class FiberInstance:
     def set_dispersion_function(self, dispersion_function, dispersion_format='GVD'):
         """
         This allows the user to provide a function for the fiber dispersion that can vary as a function
-        of `z`, the lenght along the fiber. The function can either provide beta2, beta3, beta4, etc. 
+        of `z`, the length along the fiber. The function can either provide beta2, beta3, beta4, etc. 
         coefficients, or provide two arrays, wavelength (nm) and D (ps/nm/km)
         
         Parameters
         ----------
         dispersion_function : function 
             returning D or Beta coefficients as a function of z
-        dispersion_formats: 'GVD' or 'D'
+        dispersion_formats: 'GVD' or 'D' or 'n'
             determines if the dispersion will be identified in terms of Beta coefficients 
             (GVD, in units of ps^2/m, not ps^2/km) or
             D (ps/nm/km)
+            n (effective refractive index)
         
         Notes
         -----
@@ -180,7 +183,11 @@ class FiberInstance:
         However, since this expansion is done without the lower order coefficients, the first two 
         terms of the Taylor expansion are not defined. In order to provide a nice input for the SSFM,
         which assumes that the group velocity will be zero at the pulse central frequency,
-        the slope and offset at the pump central frequency are set to zero. 
+        the slope and offset at the pump central frequency are set to zero.
+        
+        If fiberspecs["dispersion_format"] == "n", then the betas are calculated directly from 
+        the **effective refractive index (n_eff)** as beta = n_eff * 2 * pi / lambda, where lambda is the wavelength
+        of the light. In this case, self.x should be the wavelength (in nm) and self.y should be n_eff (unitless).
         
         Parameters
         ----------
@@ -196,12 +203,14 @@ class FiberInstance:
         
         """
         
+        # if the dispersion changes with z, we need to reload the dispersion:
         if self.dispersion_changes_with_z:
-            if self.fiberspecs["dispersion_format"] == "D":
+            if self.fiberspecs["dispersion_format"] == "D" or self.fiberspecs["dispersion_format"] == "n":
                 self.x, self.y = self.dispersion_function(z)
             if self.fiberspecs["dispersion_format"] == "GVD":
                 self.betas     = np.array(self.dispersion_function(z))
             
+        
         B = np.zeros((pulse.NPTS,))
         if self.fiberspecs["dispersion_format"] == "D":
             self.betas = DTabulationToBetas(pulse.center_wavelength_nm,
@@ -221,18 +230,38 @@ class FiberInstance:
             for i in range(len(betas)):
                 betas[i] = betas[i]
                 B = B + betas[i] / factorial(i + 2) * (pulse.W_THz-fiber_omega0)**(i + 2)
+        
+        elif self.fiberspecs["dispersion_format"] == "n":
+            # simply interpolate (using a spline) the betas from the refractive index
+            # self.x is the wavelength in nm
+            # self.y is the refractive index (unitless)
             
-            # now we have beta calculated in terms of distance from the fiber central frequency
-            # what we want is to have beta referenced from the *pulse* central frequency
-                
+            supplied_W_THz = 2 * np.pi * 1e-12 * 3e8 / (self.x*1e-9)
+            supplied_betas = self.y * 2 * np.pi / (self.x * 1e-9)
+            # InterpolatedUnivariateSpline wants increasing x, so flip arrays
+            interpolator = scipy.interpolate.InterpolatedUnivariateSpline(supplied_W_THz[::-1], supplied_betas[::-1]) 
+            B = interpolator(pulse.W_THz)
+            print pulse.W_THz
+            # print supplied_V_THz
+            # print supplied_betas
+            
+            
+            
+        # in the case of "GVD" or "n" it's possible (likely) that the betas will not be zero and have zero
+        # slope at the pulse central frequency. For the NLSE, we need to move into a frame propagating at the
+        # same group velocity, so we need to set the value and slope of beta at the pulse wavelength to zero:
+        if self.fiberspecs["dispersion_format"] == "GVD" or self.fiberspecs["dispersion_format"] == "n":
             center_index = np.argmin(np.abs(pulse.V_THz))
             slope = np.gradient(B)/np.gradient(pulse.W_THz)
             B = B - slope[center_index] * (pulse.V_THz) - B[center_index]
             
+            # print B
             return B
             
         else:
             return -1
+            
+            
     def get_gain(self,pulse,output_power = 1):
         """ Retrieve gain spectrum for fiber. If fiber has 'simple gain', this
         is a scalar. If the fiber has a gain spectrum (eg EDF or YDF), this will
@@ -250,7 +279,7 @@ class FiberInstance:
                     self.gain_x_units = self.fiberspecs["gain_x_units"]
                     x = np.array(self.fiberspecs["gain_x_data"])
                     y = np.array(self.fiberspecs["gain_y_data"])
-                    f = interp1d(self.c_mks/x[::-1],y[::-1],kind ='cubic',
+                    f = scipy.interpolate.interp1d(self.c_mks/x[::-1],y[::-1],kind ='cubic',
                                  bounds_error=False,fill_value=0)
                     gain_spec = f(pulse.W_mks/ (2*np.pi))
 
@@ -277,6 +306,7 @@ class FiberInstance:
     def Beta2_to_D(self, pulse): # in ps / nm / km
         """ This provides the dispersion parameter D (in ps / nm / km) at each frequency of the supplied pulse"""
         return -2 * np.pi * self.c / pulse.wl_nm**2 * self.Beta2(pulse) * 1000
+        
     def Beta2(self, pulse):
         """ This provides the beta_2 (in ps^2 / meter)."""
         dw = pulse.V_THz[1] - pulse.V_THz[0]
