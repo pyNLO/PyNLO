@@ -59,6 +59,7 @@ class FiberInstance:
         self.is_simple_fiber = False
         self.fiberloader = JSONFiberLoader.JSONFiberLoader('general_fibers')
         self.dispersion_changes_with_z = False
+        self.gamma_changes_with_z = False
         
         
     def load_from_db(self, length, fibertype, poly_order = 2):
@@ -166,6 +167,43 @@ class FiberInstance:
         self.dispersion_changes_with_z = True
         self.fiberspecs["dispersion_format"] = dispersion_format
         self.dispersion_function = dispersion_function
+    
+    def set_gamma_function(self, gamma_function):
+        """
+        This allows the user to provide a function for gamma (the effective nonlinearity, in units
+        of 1/(Watts * meters)) that 
+        can vary as a function of `z`, the length along the fiber. 
+        
+        Parameters
+        ----------
+        gamma_function : function 
+            returning gamma function of z
+        
+        """
+        self.gamma_function = gamma_function
+        self.gamma_changes_with_z = True
+    
+    def get_gamma(self, z=0):
+        """
+        Allows the gamma (effective nonlinearity) to be queried at a specific z-position
+        
+        Parameters
+        ----------
+        z : float
+            the position along the fiber (in meters)
+        
+        Returns
+        -------
+        gamma : float
+            the effective nonlinearity (in units of 1/(Watts * meters))"""
+        
+        if self.gamma_changes_with_z:
+            gamma = self.gamma_function(z)
+        else:
+            gamma = self.gamma
+            
+        return gamma
+        
         
         
     def get_betas(self, pulse, z=0):
@@ -238,13 +276,11 @@ class FiberInstance:
             
             supplied_W_THz = 2 * np.pi * 1e-12 * 3e8 / (self.x*1e-9)
             supplied_betas = self.y * 2 * np.pi / (self.x * 1e-9)
+            
             # InterpolatedUnivariateSpline wants increasing x, so flip arrays
             interpolator = scipy.interpolate.InterpolatedUnivariateSpline(supplied_W_THz[::-1], supplied_betas[::-1]) 
             B = interpolator(pulse.W_THz)
-            print pulse.W_THz
-            # print supplied_V_THz
-            # print supplied_betas
-            
+
             
             
         # in the case of "GVD" or "n" it's possible (likely) that the betas will not be zero and have zero
@@ -314,6 +350,8 @@ class FiberInstance:
         out = np.append(out[0], out)
         out = np.append(out, out[-1])
         return out
+    
+    
 
     def generate_fiber(self, length, center_wl_nm, betas, gamma_W_m, gain = 0,
                        gvd_units = 'ps^n/m', label = 'Simple Fiber'):
