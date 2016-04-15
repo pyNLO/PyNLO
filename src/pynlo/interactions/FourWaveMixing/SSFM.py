@@ -222,8 +222,8 @@ class SSFM:
             plt.show()
                 
         # Load up parameters
-        self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
-        #self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=False)
+        # self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
+        self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=False)
         
         self.omegas[:]  = self.conditional_fftshift(self.omegas)
         # self.betas[:]   = self.conditional_fftshift(self.betas)
