@@ -41,16 +41,16 @@ Points  = 2**12  # simulation points
 
 # final
 
-trials = 5
-error   = 0.001  # error desired by the integrator. Usually 0.001 is plenty good. Use larger values for speed
-Steps   = 300     # simulation steps
-Points  = 2**12  # simulation points
+# trials = 5
+# error   = 0.001  # error desired by the integrator. Usually 0.001 is plenty good. Use larger values for speed
+# Steps   = 300     # simulation steps
+# Points  = 2**12  # simulation points
 
 
 
 # Coherent:
-FWHM    = 0.2  # pulse duration (ps)
-EPP     = 100e-12 # Energy per pulse (J)
+FWHM    = 0.4  # pulse duration (ps)
+EPP     = 200e-12 # Energy per pulse (J)
 
 
 # Incoherent
@@ -81,53 +81,40 @@ fiber1.generate_fiber(Length * 1e-3, center_wl_nm=fibWL, betas=(beta2, beta3, be
 evol = pynlo.interactions.FourWaveMixing.SSFM.SSFM(local_error=error, USE_SIMPLE_RAMAN=True,
                  disable_Raman              = np.logical_not(Raman), 
                  disable_self_steepening    = np.logical_not(Steep))                                
-                                
-
-# create the pulse!
-original_pulse = pynlo.light.DerivedPulses.SechPulse(power = 1, # Power will be scaled by set_epp
-                                            T0_ps                   = FWHM/1.76, 
-                                            center_wavelength_nm    = pulseWL, 
-                                            time_window_ps          = Window,
-                                            GDD=GDD, TOD=TOD, 
-                                            NPTS            = Points, 
-                                            frep_MHz        = 100, 
-                                            power_is_avg    = False)
-
-original_pulse.set_epp(EPP) # set the pulse energy 
 
 
-def include_noise(Pulse):
-    import copy
-    W = Pulse.W_THz
-    A = Pulse.AW
-    
-    size_of_bins = np.gradient(W)
-    
-    energy_per_bin = np.abs(A)**2/size_of_bins * 1e-12
-    
-    h = 6.62607004e-34
-    photon_energy = h * W/(2*np.pi) * 1e12
-    photons_per_bin = energy_per_bin/photon_energy
-    
-    print 'Total energy: %.1f pJ'%(np.sum(energy_per_bin) * 1e12)
-    # plt.plot(F, photons_per_bin)
-    print 'Photons per bin (min/max/avg): %.2e/%.2e/%.2e\nTotal photons: %.2e'%(np.max(photons_per_bin),
-           np.min(photons_per_bin),np.mean(photons_per_bin), np.sum(photons_per_bin))
-          
-    
-    size = np.shape(A)[0]
-    random_intensity = np.random.normal(size=size)
-    random_phase = np.random.uniform(size=size) * 2 * np.pi
-        
-    photons_per_bin[photons_per_bin<0] = 0
-    noise = random_intensity * np.sqrt(photons_per_bin) * photon_energy * size_of_bins * 1e12 * np.exp(1j*random_phase)
-    
-    print noise
-    
-    output_pulse = copy.copy(Pulse)
-    output_pulse.set_AW(A + noise)
-    
-    return output_pulse
+# def include_noise(Pulse):
+#     import copy
+#     W = Pulse.W_THz
+#     A = Pulse.AW
+#
+#     size_of_bins = np.gradient(W)
+#
+#     energy_per_bin = np.abs(A)**2/size_of_bins * 1e-12
+#
+#     h = 6.62607004e-34
+#     photon_energy = h * W/(2*np.pi) * 1e12
+#     photons_per_bin = energy_per_bin/photon_energy
+#
+#     print 'Total energy: %.1f pJ'%(np.sum(energy_per_bin) * 1e12)
+#     # plt.plot(F, photons_per_bin)
+#     print 'Photons per bin (min/max/avg): %.2e/%.2e/%.2e\nTotal photons: %.2e'%(np.max(photons_per_bin),
+#            np.min(photons_per_bin),np.mean(photons_per_bin), np.sum(photons_per_bin))
+#
+#
+#     size = np.shape(A)[0]
+#     random_intensity = np.random.normal(size=size)
+#     random_phase = np.random.uniform(size=size) * 2 * np.pi
+#
+#     photons_per_bin[photons_per_bin<0] = 0
+#     noise = random_intensity * np.sqrt(photons_per_bin) * photon_energy * size_of_bins * 1e12 * np.exp(1j*random_phase)
+#
+#     print noise
+#
+#     output_pulse = copy.copy(Pulse)
+#     output_pulse.set_AW(A + noise)
+#
+#     return output_pulse
     
     # plt.plot(W, A, label='before')
     # plt.plot(W, Pulse.AW, label='with noise')
@@ -142,7 +129,20 @@ def include_noise(Pulse):
 
 for num in range(0,trials):
 
-    pulse = include_noise(original_pulse)
+    # create the pulse!
+    pulse = pynlo.light.DerivedPulses.SechPulse(power = 1, # Power will be scaled by set_epp
+                                                T0_ps                   = FWHM/1.76, 
+                                                center_wavelength_nm    = pulseWL, 
+                                                time_window_ps          = Window,
+                                                GDD=GDD, TOD=TOD, 
+                                                NPTS            = Points, 
+                                                frep_MHz        = 100, 
+                                                power_is_avg    = False)
+
+    pulse.set_epp(EPP) # set the pulse energy
+    
+    pulse.add_noise(noise_type='sqrt_N_freq')
+    
     y, AW, AT, pulse_out = evol.propagate(pulse_in=pulse, fiber=fiber1, n_steps=Steps)
         
     if 'AW_stack' not in locals():
