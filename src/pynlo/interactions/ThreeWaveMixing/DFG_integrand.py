@@ -16,7 +16,6 @@ Authors: Dan Maser, Gabe Ycas
 
 import numpy as np
 import scipy.fftpack as fftpack
-import pyfftw
 from copy import deepcopy
 from scipy import constants
 from pynlo.light import OneDBeam
@@ -24,6 +23,13 @@ import exceptions
 from pynlo.light.DerivedPulses import NoisePulse
 from pynlo.light.PulseBase import Pulse
 from matplotlib import pyplot as plt
+import logging
+
+try:
+    import pyfftw
+    PYFFTW_AVAILABLE=True
+except:
+    PYFFTW_AVAILABLE=False
 
 
 class dfg_problem:     
@@ -57,22 +63,26 @@ class dfg_problem:
         self._calc_gouy = apply_gouy_phase
         self._plot_beam_overlaps = plot_beam_overlaps
 
-        # Create idler Pulse. Some checking is required to make sure that 
-        # negative frequencies are not encountered.        
-        idler_cwl = 1.0/(1.0/pump_in.center_wavelength_nm -\
-                         1.0/sgnl_in.center_wavelength_nm)
-
-        idlr_in = NoisePulse(center_wavelength_nm   = idler_cwl, 
+        # Create idler Pulse.
+        
+        # The idler grid must be centered to match DFG of the pump and signal
+        # center frequencies. The center matching is implicitly used in the
+        # mixing calculations to conserve energy
+        idler_cwl_natural = 1.0/(1.0/pump_in.center_wavelength_nm -\
+                             1.0/sgnl_in.center_wavelength_nm)   
+        idlr_in = NoisePulse(center_wavelength_nm   = idler_cwl_natural, 
                              frep_MHz               = pump_in.frep_MHz,
                              NPTS                   = pump_in.NPTS,
                              time_window_ps         = pump_in.time_window_ps)        
-        # Check that fields do not overlap
+        
+
+        # Double check that fields do not overlap
         if ( max(pump_in.wl_nm) > min(sgnl_in.wl_nm) ): 
             raise exceptions.ValueError("Pump and signal field grids overlap.")
         if ( max(sgnl_in.wl_nm) > min(idlr_in.wl_nm) ):
             raise exceptions.ValueError("Signal and idler field grids overlap.")
         self.idlr_in = idlr_in
-        
+
         self.pump = deepcopy(pump_in)
         self.sgnl = deepcopy(sgnl_in)
         self.idlr = deepcopy(idlr_in)
@@ -321,7 +331,7 @@ class dfg_problem:
         # np.sqrt(2 / (c * eps * pi * waist**2)) converts to electric field        
         # If the chi-3 terms are included:
         if not self.disable_SPM:
-            print 'Warning: this code not updated with correct field-are scaling. Fix it if you use it!'
+            logging.warn('Warning: this code not updated with correct field-are scaling. Fix it if you use it!')
             jpap = self.phi_p**-1 * self.fftobject.conv(self.jl_p, self.Ap(y) * self.phi_p) * \
                    np.sqrt(2. / (constants.speed_of_light * constants.epsilon_0 * np.pi * waist_p**2))
             jsas = self.phi_s**-1 * self.fftobject.conv(self.jl_s, self.As(y) * self.phi_s) * \

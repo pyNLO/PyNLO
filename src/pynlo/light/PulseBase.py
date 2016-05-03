@@ -145,9 +145,12 @@ class Pulse:
             self._cache_W_Hz_hash = self.cache_hash
             self._cache_W_Hz                 =  self._W * 1e12
             return self._cache_W_Hz
-            
+    def _get_F_Hz(self):
+        return self._get_W_Hz() / (2.0*np.pi)            
     def _get_W_THz(self):
         return self._W
+    def _get_F_THz(self):
+        return self._W / (2.0*np.pi)
     def _get_dT_seconds(self):
         return self._dT * 1e-12
     def _get_dT_picoseconds(self):
@@ -234,6 +237,15 @@ class Pulse:
         Angular frequency grid corresponding to AW [THz]
     """
 
+    F_THz           = property(_get_F_THz)
+    """ Property: frequency grid 
+        
+    Returns
+    -------
+    F_THz : ndarray, shape NPTS
+        Frequency grid corresponding to AW [THz]
+    """
+
     dT_ps           = property(_get_dT_picoseconds)
     """    
     Property: time grid spacing
@@ -309,6 +321,15 @@ class Pulse:
     W_mks : ndarray, shape NPTS
         Angular frequency grid corresponding to AW [Hz]
     """    
+    F_mks           = property(_get_F_Hz)
+    """ Property: frequency grid 
+        
+    Returns
+    -------
+    F_mks : ndarray, shape NPTS
+        Frequency grid corresponding to AW [Hz]
+    """    
+
     dT_mks          = property(_get_dT_seconds)
     """    
     Property: time grid spacing
@@ -565,44 +586,7 @@ class Pulse:
         # Internally, the time window is used to determine the grids. Calculate
         # the time window size as  1 / dF = 1 / (DF / N)
         T = self._n / float(DF)
-        self._set_time_window(T * 1e12)            
-
-# Depricated, to be removed:
-#    def set_units(self, external_units):
-#        if external_units == 'nmps':
-#            self.external_c = self._c_nmps
-#            self._external_units = external_units                    
-#        elif external_units == 'mks':
-#            self.external_c = self._c_mks
-#            self._external_units = external_units        
-#        else:
-#            exceptions.ValueError('Unit type ',external_units,' is not known. Valid values are nmps and mks.')            
-#    def internal_time_from_ps(self, time, power = 1):        
-#        """ Convert to internal units of ps"""
-#        if self._ext_units_nmps():
-#            return time
-#        if self._ext_units_mks():
-#            return time * (1e-12)**power
-#    def internal_time_to_ps(self, time, power = 1):
-#        """ Convert from internal units of ps to external time """
-#        if self._ext_units_nmps():
-#            return time
-#        if self._ext_units_mks():
-#            return time * (1e12)**power                    
-#            
-#    def internal_wl_from_nm(self, wl):
-#        """ Convert to internal units of nm """
-#        if self._ext_units_nmps():
-#            return wl
-#        if self._ext_units_mks():
-#            return wl * 1e-9
-#    def internal_wl_to_nm(self, wl):
-#        """ Convert from internal units of nm to external units """
-#        if self._ext_units_nmps():
-#            return wl
-#        if self._ext_units_mks():
-#            return wl * 1e9
-                
+        self._set_time_window(T * 1e12)                            
 
     ####### Auxiliary public  functions     ###################################
     def calc_epp(self):
@@ -712,12 +696,33 @@ class Pulse:
         new_center_THz = self._c_nmps/new_center_wl_nm
         rotation = (self.center_frequency_THz-new_center_THz)/self.dF_THz
         self.set_AW(np.roll(self.AW, int(round(rotation))))
+    def interpolate_to_new_center_wl(self, new_wavelength_nm):
+        r""" Change grids by interpolating the electric field onto a new
+        frequency grid, defined by the new center wavelength and the current
+        pulse parameters. This is useful when grid overlaps must be avoided,
+        for example in difference or sum frequency generation.
+                
+        Parameters
+        ----------
+        new_wavelength_nm : float
+             New center wavelength [nm]
+        Returns
+        -------
+        Pulse instance        
+        """                
+        working_pulse = self.create_cloned_pulse()
+        working_pulse.set_center_wavelength_nm(new_wavelength_nm)
+        interpolator = interp1d(self.W_mks, self. AW,
+                                bounds_error = False,
+                                fill_value = 0.0)
+        working_pulse.set_AW(interpolator(working_pulse.W_mks))
+        return working_pulse
+        
     def filter_by_wavelength_nm(self, lower_wl_nm, upper_wl_nm):
         AW_new = self.AW
         AW_new[self.wl_nm < lower_wl_nm] = 0.0
         AW_new[self.wl_nm > upper_wl_nm] = 0.0
-        self.set_AW(AW_new)
-        
+        self.set_AW(AW_new)        
     def clone_pulse(self, p):
         '''Copy all parameters of pulse_instance into this one'''
         self.set_NPTS(p.NPTS)
@@ -793,3 +798,90 @@ class Pulse:
         
         # Write pulse data file
         np.savetxt(self.fileloc, np.vstack((wavel_data, inten_data, phase_data)).T) 
+    
+    def spectrogram(self, gate_function_width_ps=0.050, time_steps=500):
+        """
+        This calculates a spectrogram, essentially showing the spectrum
+        as a funcition of time delay. See Dudley Fig. 10, on p1153 for a description
+        of the spectrogram in the context of supercontinuum generaiton. 
+        (http://dx.doi.org/10.1103/RevModPhys.78.1135)
+        
+        
+        Parameters
+        ----------
+        
+        gate_function_width : float
+            the width of the gate function in seconds. Typically something like 
+            0.050 ps (50 fs) is used
+        
+        time_steps : int
+            the number of delay time steps to use. More steps makes a higher 
+            resolution spectrogram, but takes longer to process and plots.
+            ~500 seems about right.
+        
+        
+        Returns
+        -------
+        DELAYS : 2D numpy meshgrid 
+            the columns have increasing delay (in ps)
+        FREQS : 2D numpy meshgrid
+            the rows have increasing frequency (in THz)
+        spectrogram : 2D numpy array
+            Following the convention of Dudley, the frequency runs along the y-axis
+            (axis 0) and the time runs alon the x-axis (axis 1)
+        
+        
+        Example
+        -------
+        
+        The spectrogram can be visualized using something like this: ::
+        
+            plt.figure()
+            DELAYS, FREQS, extent, spectrogram = pulse.spectrogram()
+            plt.imshow(spectrogram, aspect='auto', extent=extent)
+            plt.xlabel('Time (ps)')
+            plt.ylabel('Frequency (THz)')
+            plt.tight_layout
+    
+            plt.show()
+        
+        output:
+        
+        .. image:: https://cloud.githubusercontent.com/assets/1107796/13677657/25075ea4-e6a8-11e5-98b4-7813fa9a6425.png
+           :width: 500px
+           :alt: example_result
+            
+    
+        """
+
+        def gauss(x, A=1, mu=0, sigma=1): # gaussian function
+            return A*np.exp(-(x-mu)**2/(2.*sigma**2))
+            
+        t = self.T_ps # working in ps
+        
+        delay = np.linspace(np.min(t), np.max(t), time_steps)
+        D, T = np.meshgrid(delay, t)
+        D, AT = np.meshgrid(delay, self.AT)
+        
+        phase = np.unwrap(np.angle(AT))
+        amp   = np.abs(AT)
+        
+        # make a 2D array of E(time, delay)
+        E = amp * np.cos(2 * np.pi * T * self.center_frequency_THz + phase) * \
+            gauss(T, mu=D, sigma=gate_function_width_ps) # gate function
+        
+        spectrogram = np.fft.fft(E, axis=0)
+        freqs = np.fft.fftfreq(np.shape(E)[0], t[1]-t[0])
+        
+        DELAYS, FREQS = np.meshgrid(delay, freqs)
+        
+        # just take positive frequencies:
+        h = np.shape(spectrogram)[0]
+        spectrogram = spectrogram[:h/2]
+        DELAYS      = DELAYS[:h/2]
+        FREQS       = FREQS[:h/2]
+                
+        # calculate the extent to make it easy to plot:
+        extent = (np.min(DELAYS), np.max(DELAYS), np.min(FREQS), np.max(FREQS))
+        
+        return DELAYS, FREQS, extent, np.abs(spectrogram)

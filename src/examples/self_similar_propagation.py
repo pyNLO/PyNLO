@@ -37,7 +37,7 @@ T0 = 0.500
 beta = [24000.0*1e-6, 0.0]
 P0 = 1
 
-init =GaussianPulse(P0, T0, centerwl, NPTS = 2**14, time_window = 40)
+init =GaussianPulse(P0, T0, centerwl, NPTS = 2**14, time_window_ps = 40)
 init.set_AT(init.AT*np.sqrt(12e-12 / init.calc_epp()))
 fiber1 = fiber.FiberInstance()
 fiber1.generate_fiber(fiber_length, centerwl, beta, gamma, 0.8, "ps^n/m")

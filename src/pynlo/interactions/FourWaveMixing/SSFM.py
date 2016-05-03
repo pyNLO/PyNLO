@@ -40,6 +40,9 @@ class SSFM:
                  disable_Raman = False, disable_self_steepening = False,
                  suppress_iteration = True, USE_SIMPLE_RAMAN = False,
                  f_R = 0.18, f_R0 = 0.18, tau_1 = 0.0122, tau_2 = 0.0320):
+        """
+        This initialization function sets up the parameters of the SSFM.
+        """
         self.iter = 0
         self.last_h = -1.0
         self.last_dir = 0.0
@@ -50,8 +53,8 @@ class SSFM:
         self.disable_self_steepening = disable_self_steepening
         self.USE_SIMPLE_RAMAN = USE_SIMPLE_RAMAN
 
-        # Raman fraction; may change depending upon which calculation method is
-        # used 
+        # Raman fraction; may change depending upon which calculation method 
+        # is used 
         self.f_R = f_R
         # The value for the old-style Raman response
         self.f_R0 = f_R0
@@ -62,6 +65,18 @@ class SSFM:
         self.dz_min = 1e-12
         self.suppress_iteration = suppress_iteration
 
+
+    def load_fiber_parameters(self, pulse_in, fiber, output_power, z=0):
+        """
+        This funciton loads the fiber parameters into class variables.
+        """
+        self.betas[:]  =  fiber.get_betas(pulse_in, z=z)
+        # self.alpha[:]  = -fiber.get_gain(pulse_in, output_power) # currently alpha cannot change with z
+        self.gamma     =  fiber.get_gamma(z=z)
+        
+        self.betas[:]  = self.conditional_fftshift(self.betas)
+        # self.alpha[:]   = self.conditional_fftshift(self.alpha)
+        
 
 
     def setup_fftw(self, pulse_in, fiber, output_power, raman_plots = False):
@@ -163,66 +178,78 @@ class SSFM:
 
         self.A_I[:] = 0.0        
         self.A2[:]  = 0.0
-        self.Af[:] = 0.0
-        self.Ac[:] = 0.0
-        self.A[:] = 0.0
-        self.R[:] = 0.0
-        self.R0[:] = 0.0
+        self.Af[:]  = 0.0
+        self.Ac[:]  = 0.0
+        self.A[:]   = 0.0
+        self.R[:]   = 0.0
+        self.R0[:]  = 0.0
         
-        self.omegas[:]      =  pulse_in.V_THz
-        self.betas[:]       =  fiber.get_betas(pulse_in)
-        self.alpha[:]       = -fiber.get_gain(pulse_in, output_power)
-        self.gamma          = fiber.gamma
-        self.w0             = pulse_in.center_frequency_THz * 2.0 * np.pi
+        self.omegas[:] =  pulse_in.V_THz
+        self.alpha[:]  = -fiber.get_gain(pulse_in, output_power) 
+        self.gamma     =  fiber.gamma
+        self.w0        =  pulse_in.center_frequency_THz * 2.0 * np.pi
 
-        self.last_h = None      
+        self.last_h    =  None      
 
-        if not self.disable_Raman:
-            self.CalculateRamanResponseFT(pulse_in)
-            if raman_plots:
-                plt.subplot(221)
-                plt.plot(self.omegas/(2*np.pi), np.abs(self.R - (1-self.f_R)),'bo')                
-                plt.plot(self.omegas/(2*np.pi), np.abs(self.R0 - (1-self.f_R0)),'r')
-                #plt.xlim([0,25])
-                plt.title('Abs[R(w)]')
-                plt.xlabel('THz')                
-                plt.subplot(222)
-                plt.plot(self.omegas/(2*np.pi), np.unwrap(np.angle(self.R-(1-self.f_R))),'bo')
-                plt.plot(self.omegas/(2*np.pi), np.unwrap(np.angle(self.R0-(1-self.f_R0))),'r')                
-                plt.title('Angle[R(w)]')
-                plt.xlabel('THz')
-                plt.subplot(223)
-                plt.plot(pulse_in.T*1000, ifftshift(np.real(self.IFFT_t(\
-                        self.R - (1-self.f_R)))), 'bo')
-                plt.plot(pulse_in.T*1000, ifftshift(np.real(self.IFFT_t(\
-                        self.R0 - (1-self.f_R0)))), 'r')  
-                plt.title('Abs[R[t]]')
-                plt.xlim([0,1000])
-                plt.xlabel('fs')
-                plt.subplot(224)
-                plt.plot(self.omegas/(2*np.pi), abs(self.FFT_t(self.A)))
-                plt.title('Abs[A[w]]')
-                plt.xlabel('THz')
-                plt.show()
+        # if not self.disable_Raman:
+        
+        self.CalculateRamanResponseFT(pulse_in)
+
+        if raman_plots:
+            plt.subplot(221)
+            plt.plot(self.omegas/(2*np.pi), np.abs(self.R - (1-self.f_R)),'bo')
+            plt.plot(self.omegas/(2*np.pi), np.abs(self.R0 - (1-self.f_R0)),'r')
+            #plt.xlim([0,25])
+            plt.title('Abs[R(w)]')
+            plt.xlabel('THz')
+            plt.subplot(222)
+            plt.plot(self.omegas/(2*np.pi), np.unwrap(np.angle(self.R-(1-self.f_R))),'bo')
+            plt.plot(self.omegas/(2*np.pi), np.unwrap(np.angle(self.R0-(1-self.f_R0))),'r')
+            plt.title('Angle[R(w)]')
+            plt.xlabel('THz')
+            plt.subplot(223)
+            plt.plot(pulse_in.T*1000, ifftshift(np.real(self.IFFT_t(\
+                    self.R - (1-self.f_R)))), 'bo')
+            plt.plot(pulse_in.T*1000, ifftshift(np.real(self.IFFT_t(\
+                    self.R0 - (1-self.f_R0)))), 'r')
+            plt.title('Abs[R[t]]')
+            plt.xlim([0,1000])
+            plt.xlabel('fs')
+            plt.subplot(224)
+            plt.plot(self.omegas/(2*np.pi), abs(self.FFT_t(self.A)))
+            plt.title('Abs[A[w]]')
+            plt.xlabel('THz')
+            plt.show()
+                
         # Load up parameters
         self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
+        #self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=False)
+        
         self.omegas[:]  = self.conditional_fftshift(self.omegas)
-        self.betas[:]   = self.conditional_fftshift(self.betas)
+        # self.betas[:]   = self.conditional_fftshift(self.betas)
         self.alpha[:]   = self.conditional_fftshift(self.alpha)
         self.R[:]       = self.conditional_fftshift(self.R)
         self.R0[:]      = self.conditional_fftshift(self.R0)
         print 'pulse energy in ',np.sum(abs(pulse_in.AT))
         print 'copied as  ',np.sum(abs(self.A))
+        
     #-----------------------------------------------------------------------
     # Calculates the Fourier Transform of R(T). See pg 49 of G. P. Agrawal's 
     # "Nonlinear fiber optics"  for details 
     #-----------------------------------------------------------------------
     def CalculateRamanResponseFT(self, pulse):
-        ''' Calculate Raman response in frequency domain. Two versions are
-            available: the first is the LaserFOAM one, which directly calculates
-            R[w]. The second is Dudley-style, which calculates R[t] and then
-            FFTs. Note that the use of fftshifts is critical here (FFT_t_shift)
-            as is the factor of pulse_width.'''
+        """
+        Calculate Raman response in frequency domain. Two versions are
+        available: the first is the LaserFOAM one, which directly calculates
+        R[w]. The second is Dudley-style, which calculates R[t] and then
+        FFTs. Note that the use of fftshifts is critical here (FFT_t_shift)
+        as is the factor of pulse_width.
+        """
+        
+        if self.disable_Raman:
+            self.R[:]=1
+            return
+
         # Laserfoam raman function.
         TAU1 = self.tau_1
         TAU2 = self.tau_2
@@ -372,30 +399,35 @@ class SSFM:
         return self.IFFT_t(-1.0j*self.omegas * Aw)
 
     def NonlinearOperator(self,A):
-        if self.disable_Raman:
-            if self.disable_self_steepening:
-                return 1j*self.gamma*np.abs(A)**2
-                
-            self.Aw[:] = self.FFT_t(A)
-            self.dA[:] = self.Deriv(A)
-            
-            return 1j*self.gamma*np.abs(A)**2 - \
-                   (self.gamma/self.w0)*(2.0*self.dA*A.conj() + A*self.dA.conj())
+        # DH commented this out on 2016-03-18
+        # it should be taken care of by setting
+        # self.R[:]=0 in CalculateRamanResponseFT
+        # if self.disable_Raman:
+ #            if self.disable_self_steepening:
+ #                return 1j*self.gamma*np.abs(A)**2
+ #
+ #            self.Aw[:] = self.FFT_t(A)
+ #            self.dA[:] = self.Deriv(A)
+ #
+ #            return 1j*self.gamma*np.abs(A)**2 - \
+ #                   (self.gamma/self.w0)*(2.0*self.dA*A.conj() + A*self.dA.conj())
+ #
+ #
+ #        else:
+        self.A2[:]  = np.abs(A)**2   
+        self.A2w[:] = self.FFT_t(self.A2)
+   
+        if self.disable_self_steepening:
+            return 1j*self.gamma*self.IFFT_t(self.R*self.A2w)
         else:
-            self.A2[:]  = np.abs(A)**2   
-            self.A2w[:] = self.FFT_t(self.A2)
-           
-            if self.disable_self_steepening:
-                return 1j*self.gamma*self.IFFT_t(self.R*self.A2w)
-            else:
-                self.Aw[:]      = self.FFT_t(A)
-                self.R_A2[:]    = self.IFFT_t(self.R*self.A2w)
-                self.dA[:]      = self.Deriv(self.Aw)
-                self.dA2[:]     = self.Deriv(self.A2w)
-                self.dR_A2[:]   = self.IFFT_t(self.R*self.FFT_t(self.dA2))
-                
-                return 1j*self.gamma*self.R_A2 - (self.gamma/self.w0)* \
-                       (self.dR_A2 + np.where(np.abs(A)>1.0E-15,self.dA*self.R_A2/(1.0e-20+A),0.0))
+            self.Aw[:]      = self.FFT_t(A)
+            self.R_A2[:]    = self.IFFT_t(self.R*self.A2w)
+            self.dA[:]      = self.Deriv(self.Aw)
+            self.dA2[:]     = self.Deriv(self.A2w)
+            self.dR_A2[:]   = self.IFFT_t(self.R*self.FFT_t(self.dA2))
+        
+            return 1j*self.gamma*self.R_A2 - (self.gamma/self.w0)* \
+                   (self.dR_A2 + np.where(np.abs(A)>1.0E-15,self.dA*self.R_A2/(1.0e-20+A),0.0))
 
 
     def RK4IP(self,A,h,direction):
@@ -409,7 +441,6 @@ class SSFM:
                         (self.A_I + self.k2/2.0)        
         self.temp[:] = self.IFFT_t_2(self.exp_D*self.FFT_t_2(self.A_I+self.k3))
         self.k4[:] = h * direction * self.NonlinearOperator(self.temp)*self.temp
-        #print np.sum(abs(self.A_I)),np.sum(abs(self.k1)),np.sum(abs(self.k2)),np.sum(abs(self.k3)),np.sum(abs(self.temp)),np.sum(abs(self.k4))
         if not self.suppress_iteration:
             print "ks: ",np.sum(np.abs(self.k1)),np.sum(np.abs(self.k2)),\
                     np.sum(np.abs(self.k3)),np.sum(np.abs(self.k2))
@@ -419,7 +450,20 @@ class SSFM:
     def Calculate_expD(self,h,direction):        
         self.exp_D[:] = np.exp(direction*h*0.5*(1j*self.betas-self.alpha/2.0))
 
-    def propagate(self, pulse_in, fiber, n_steps, output_power = None):
+    def propagate(self, pulse_in, fiber, n_steps, output_power=None, reload_fiber_each_step=False):
+        """
+        This is the main user-facing function that allows a pulse to be 
+        propagated along a fiber (or other nonlinear medium). 
+        
+        Parameters
+        ----------
+        
+        pulse_in : pulse object
+            this is an instance of the :class:`pynlo.light.PulseBase.Pulse` class.
+        fiber : fiber object
+            this is an instance of the :class:`pynlo.media.fiber.FiberInstance` class.
+        
+        """
 
         n_steps = int(n_steps)
         
@@ -439,9 +483,15 @@ class SSFM:
         pulse_out = Pulse()        
         pulse_out.clone_pulse(pulse_in)
         self.setup_fftw(pulse_in, fiber, output_power)
+        self.load_fiber_parameters(pulse_in, fiber, output_power) 
+        
 
         for i in range(n_steps):                        
             print "Step:", i, "Distance remaining:", fiber.length * (1 - np.float(i)/n_steps)
+            
+            if reload_fiber_each_step:
+                self.load_fiber_parameters(pulse_in, fiber, output_power, z=i*delta_z) 
+            
             self.integrate_over_dz(delta_z)            
             AW[:,i] = self.conditional_ifftshift(self.FFT_t_2(self.A))
             AT[:,i] = self.conditional_ifftshift(self.A)
@@ -458,12 +508,14 @@ class SSFM:
         
     def propagate_to_gain_goal(self, pulse_in, fiber, n_steps, power_goal = 1,
                               scalefactor_guess = None, powertol = 0.05):
-        """Integrate over length of gain fiber such that the average output
-            poweris power_goal [W]. For this to work, fiber must have spectroscopic
-            gain data from an amplifier model or measurement. If the approximate
-            scalefactor needed to adjust the gain is known it can be passed as
-            scalefactor_guess.\n This function returns a tuple of tuples:\n
-            ((ys,AWs,ATs,pulse_out), scale_factor)"""   
+        """
+        Integrate over length of gain fiber such that the average output
+        power is power_goal [W]. For this to work, fiber must have spectroscopic
+        gain data from an amplifier model or measurement. If the approximate
+        scalefactor needed to adjust the gain is known it can be passed as
+        scalefactor_guess.\n This function returns a tuple of tuples:\n
+        ((ys,AWs,ATs,pulse_out), scale_factor)
+        """   
         if scalefactor_guess is not None:
                 scalefactor = scalefactor_guess
         else:
@@ -607,7 +659,7 @@ class SSFM:
                 chksum = np.sum(abs(x))
             x[:] = ifftshift(x)
             if verify == True:
-                assert chksum == np.sum(abs(x))
+                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps
             return x
         else:
             return x
@@ -617,7 +669,7 @@ class SSFM:
                 chksum = np.sum(abs(x))
             x[:] = fftshift(x)
             if verify == True:
-                assert chksum == np.sum(abs(x))
+                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps
             return x
         else:
             return x            
