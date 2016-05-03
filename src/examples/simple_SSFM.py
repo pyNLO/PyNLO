@@ -9,7 +9,7 @@ GDD     = 0.0    # Group delay dispersion (ps^2)
 TOD     = 0.0    # Third order dispersion (ps^3)
 
 Window  = 10.0   # simulation window (ps)
-Steps   = 50     # simulation steps
+Steps   = 100     # simulation steps
 Points  = 2**13  # simulation points
 
 beta2   = -120     # (ps^2/km)
@@ -30,7 +30,7 @@ alpha = np.log((10**(Alpha * 0.1))) * 100  # convert from dB/cm to 1/m
 
 
 # set up plots for the results:
-fig = plt.figure(figsize=(10,10))
+fig = plt.figure(figsize=(8,8))
 ax0 = plt.subplot2grid((3,2), (0, 0), rowspan=1)
 ax1 = plt.subplot2grid((3,2), (0, 1), rowspan=1)
 ax2 = plt.subplot2grid((3,2), (1, 0), rowspan=2, sharex=ax0)
@@ -48,7 +48,8 @@ pulse = pynlo.light.DerivedPulses.SechPulse(power = 1, # Power will be scaled by
                                             NPTS            = Points, 
                                             frep_MHz        = 100, 
                                             power_is_avg    = False)
-pulse.set_epp(EPP) # set the pulse energy 
+# set the pulse energy!
+pulse.set_epp(EPP) 
 
 # create the fiber!
 fiber1 = pynlo.media.fibers.fiber.FiberInstance()
@@ -62,7 +63,7 @@ evol = pynlo.interactions.FourWaveMixing.SSFM.SSFM(local_error=0.005, USE_SIMPLE
 
 y, AW, AT, pulse_out = evol.propagate(pulse_in=pulse, fiber=fiber1, n_steps=Steps)
 
-########## That's it!The physics are done. Just plotting commands from here! ################
+########## That's it! Physics complete. Just plotting commands from here! ################
 
 
 F = pulse.F_THz     # Frequency grid of pulse (THz)
@@ -94,7 +95,6 @@ ax3.imshow(zT, extent=extent,
 
 ax0.set_ylabel('Intensity (dB)')
 ax0.set_ylim( - 80,  0)
-
 ax1.set_ylim( - 40, 40)
 
 ax2.set_ylabel('Propagation distance (mm)')
