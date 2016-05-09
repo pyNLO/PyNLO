@@ -82,8 +82,7 @@ class dfg_problem:
         if ( max(sgnl_in.wl_nm) > min(idlr_in.wl_nm) ):
             raise exceptions.ValueError("Signal and idler field grids overlap.")
         self.idlr_in = idlr_in
-        plt.plot(idlr_in.wl_nm, abs(idlr_in.AW), '*g')
-        plt.show()
+
         self.pump = deepcopy(pump_in)
         self.sgnl = deepcopy(sgnl_in)
         self.idlr = deepcopy(idlr_in)
