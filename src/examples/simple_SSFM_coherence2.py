@@ -29,7 +29,6 @@ Steep   = True    # Enable self steepening?
 alpha = np.log((10**(Alpha * 0.1))) * 100  # convert from dB/cm to 1/m
 
 
-
 # draft
 
 trials = 2
@@ -82,50 +81,6 @@ evol = pynlo.interactions.FourWaveMixing.SSFM.SSFM(local_error=error, USE_SIMPLE
                  disable_Raman              = np.logical_not(Raman), 
                  disable_self_steepening    = np.logical_not(Steep))                                
 
-
-# def include_noise(Pulse):
-#     import copy
-#     W = Pulse.W_THz
-#     A = Pulse.AW
-#
-#     size_of_bins = np.gradient(W)
-#
-#     energy_per_bin = np.abs(A)**2/size_of_bins * 1e-12
-#
-#     h = 6.62607004e-34
-#     photon_energy = h * W/(2*np.pi) * 1e12
-#     photons_per_bin = energy_per_bin/photon_energy
-#
-#     print 'Total energy: %.1f pJ'%(np.sum(energy_per_bin) * 1e12)
-#     # plt.plot(F, photons_per_bin)
-#     print 'Photons per bin (min/max/avg): %.2e/%.2e/%.2e\nTotal photons: %.2e'%(np.max(photons_per_bin),
-#            np.min(photons_per_bin),np.mean(photons_per_bin), np.sum(photons_per_bin))
-#
-#
-#     size = np.shape(A)[0]
-#     random_intensity = np.random.normal(size=size)
-#     random_phase = np.random.uniform(size=size) * 2 * np.pi
-#
-#     photons_per_bin[photons_per_bin<0] = 0
-#     noise = random_intensity * np.sqrt(photons_per_bin) * photon_energy * size_of_bins * 1e12 * np.exp(1j*random_phase)
-#
-#     print noise
-#
-#     output_pulse = copy.copy(Pulse)
-#     output_pulse.set_AW(A + noise)
-#
-#     return output_pulse
-    
-    # plt.plot(W, A, label='before')
-    # plt.plot(W, Pulse.AW, label='with noise')
-    # ax0.plot(W, (A - Pulse.AW))
-    #
-    # plt.legend(frameon=False)
-    #
-    # plt.show()
-    
-    
-# np.random.seed(0)
 
 for num in range(0,trials):
 
@@ -189,7 +144,6 @@ ax4.plot(pulse.T_ps,     dB(pulse.AT),  color = 'b')
 g12_line = g12[-1][F>0]
 g12_line = smooth.smooth(g12_line, window_len=11,window='hanning')[:-10]
 
-print g12_line.shape
 ax2.plot(F[F>0],g12_line, color='r')
 
 
@@ -219,7 +173,6 @@ ax4.set_ylabel('Intensity (dB)')
 ax0.set_ylim( -60,  20)
 ax2.set_ylim(-0.2, 1.2)
 ax4.set_ylim( -20, 40)
-
 
 
 ax1.set_ylabel('Propagation distance (mm)')

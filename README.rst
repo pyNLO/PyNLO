@@ -1,7 +1,9 @@
 pyNLO: Nonlinear optics modeling for Python
 ===========================================
 
-Documentation is available at http://pynlo.readthedocs.org/
+This README is best viewed at http://pynlo.readthedocs.io/en/latest/readme_link.html
+
+Complete documentation is available at http://pynlo.readthedocs.io/
 
 .. image:: https://cloud.githubusercontent.com/assets/1107796/13850062/17f09ea8-ec1e-11e5-9311-b94df29c01cb.png
    :width: 330px
@@ -20,7 +22,6 @@ Features:
 	- A solver for difference frequency generation. 
 	
 	- ...and much more!
-
 
 
 Installation
@@ -76,7 +77,7 @@ PyNLO is licensed under the `GPLv3 license <http://choosealicense.com/licenses/g
 
 
 References
---------
+----------
 [1] Johan Hult, "A Fourth-Order Runge–Kutta in the Interaction Picture Method for Simulating Supercontinuum Generation in Optical Fibers," J. Lightwave Technol. 25, 3770-3775 (2007) https://www.osapublishing.org/jlt/abstract.cfm?uri=jlt-25-12-3770
 
 

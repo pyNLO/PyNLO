@@ -460,9 +460,43 @@ class SSFM:
         
         pulse_in : pulse object
             this is an instance of the :class:`pynlo.light.PulseBase.Pulse` class.
+        
         fiber : fiber object
             this is an instance of the :class:`pynlo.media.fiber.FiberInstance` class.
         
+        n_steps : int
+            the number of steps requested in the integrator output. Note: the RK4IP integrator
+            uses an adaptive step size. It should pick the correct step size automatically,
+            so setting n_steps should not affect the accuracy, just the number of points that
+            are returned by this funciton.
+        
+        output_power : 
+            This parameter is a mystery
+    
+        reload_fiber_each_step : boolean
+            This flag determines if the fiber parameters should be reloaded every step. It is 
+            necessary if the fiber dispersion or gamma changes along the fiber length. 
+            :func:`pynlo.media.fiber.FiberInstance.set_dispersion_function` and 
+            :func:`pynlo.media.fiber.FiberInstance.set_dispersion_function` should be used
+            to specify how the dispersion and gamma change with the fiber length
+        
+        
+        Returns
+        -------
+        z_positions : array of float
+            an array of z-positions along the fiber (in meters)
+        
+        AW : 2D array of complex128
+            A 2D numpy array corresponding to the intensities in each *frequency* bin for each
+            step in the z-direction of the fiber. 
+        
+        AT : 2D array of complex128
+            A 2D numpy array corresponding to the intensities in each *time* bin for each
+            step in the z-direction of the fiber. 
+        
+        pulse_out : PulseBase object
+            the pulse after it has propagated through the fiber. This object is suitable for propagation 
+            through the next fiber!
         """
 
         n_steps = int(n_steps)
@@ -505,6 +539,8 @@ class SSFM:
 #        print "alpha out:",self.alpha
         self.cleanup()
         return z_positions, AW, AT, pulse_out
+    
+    def calculate_coherence(self, pulse_in, fiber, trials=5, n_steps=50, output_power=None, reload_fiber_each_step=False)
         
     def propagate_to_gain_goal(self, pulse_in, fiber, n_steps, power_goal = 1,
                               scalefactor_guess = None, powertol = 0.05):
