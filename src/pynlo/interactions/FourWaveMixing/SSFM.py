@@ -462,7 +462,7 @@ class SSFM:
             this is an instance of the :class:`pynlo.light.PulseBase.Pulse` class.
         
         fiber : fiber object
-            this is an instance of the :class:`pynlo.media.fiber.FiberInstance` class.
+            this is an instance of the :class:`pynlo.media.fibers.fiber.FiberInstance` class.
         
         n_steps : int
             the number of steps requested in the integrator output. Note: the RK4IP integrator
@@ -476,8 +476,8 @@ class SSFM:
         reload_fiber_each_step : boolean
             This flag determines if the fiber parameters should be reloaded every step. It is 
             necessary if the fiber dispersion or gamma changes along the fiber length. 
-            :func:`pynlo.media.fiber.FiberInstance.set_dispersion_function` and 
-            :func:`pynlo.media.fiber.FiberInstance.set_dispersion_function` should be used
+            :func:`pynlo.media.fibers.fiber.FiberInstance.set_dispersion_function` and 
+            :func:`pynlo.media.fibers.fiber.FiberInstance.set_dispersion_function` should be used
             to specify how the dispersion and gamma change with the fiber length
         
         
@@ -540,7 +540,71 @@ class SSFM:
         self.cleanup()
         return z_positions, AW, AT, pulse_out
     
-    def calculate_coherence(self, pulse_in, fiber, trials=5, n_steps=50, output_power=None, reload_fiber_each_step=False)
+    def calculate_coherence(self, pulse_in, fiber, 
+                            num_trials=5, random_seed=None, noise_type='one_photon_freq',
+                            n_steps=50, output_power=None, reload_fiber_each_step=False):
+        """
+        This function runs :func:`pynlo.interactions.FourWaveMixing.SSFM.propagate` several times (given by num_trials),
+        each time adding random noise to the pulse. By comparing the electric fields of the different pulses,
+        and estimate of the coherence can be made. 
+                            
+        The parameters are the same as for :func:`pynlo.interactions.FourWaveMixing.SSFM.propagate`, except as listed below
+        
+        Parameters
+        ----------
+        
+        num_trials : int
+            this determines the number of trials to be run. 
+        
+        random_seed : int
+            this is the seed for the random noise generation. Default is None, which does not set a seed for the random
+            number generator, which means that the numbers will be completely randomized. 
+            Setting the seed to a number (i.e., random_seed=0) will still generate random numbers for each trial,
+            but the results from calculate_coherence will be completely repeatable.
+        
+        noise_type : str
+            this specifies the method for including random noise onto the pulse. 
+            see :func:`pynlo.light.PulseBase.Pulse.add_noise` for the different methods.
+        
+        Returns
+        -------
+        g12W : 2D numpy array
+            This 2D array gives the g12 parameter as a function of propagation distance and the frequency.
+            g12 gives a measure of the coherence of the pulse by comparing several different trials.
+        
+        results : list of results for each trial
+            This is a list, where each item of the list contains (z_positions, AW, AT, pulse_out), the results
+            obtained from :func:`pynlo.interactions.FourWaveMixing.SSFM.propagate`.
+        """
+        
+        results = []
+        for num in range(0, num_trials):
+
+            pulse = pulse_in.create_cloned_pulse()
+            pulse.add_noise(noise_type='one_photon_freq')
+
+            y, AW, AT, pulse_out = self.propagate(pulse_in=pulse, fiber=fiber, n_steps=n_steps)
+
+            results.append((y, AW, AT, pulse_out))
+
+        
+        for n1, (y, E1, AT, pulseout) in enumerate(results):
+            for n2, (y, E2, AT, pulseout) in enumerate(results):
+                if n1 == n2: continue # don't compare the same trial
+
+                g12 = np.conj(E1)*E2/np.sqrt(np.abs(E1)**2 * np.abs(E2)**2)
+                if 'g12_stack' not in locals():
+                    g12_stack = g12
+                else:
+                    g12_stack = np.dstack((g12, g12_stack))
+
+
+        # print g12_stack.shape, g12_stack.transpose().shape
+        g12W = np.abs(np.mean(g12_stack, axis=2))  
+        
+        return g12W, results   
+                            
+        
         
     def propagate_to_gain_goal(self, pulse_in, fiber, n_steps, power_goal = 1,
                               scalefactor_guess = None, powertol = 0.05):

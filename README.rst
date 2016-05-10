@@ -29,7 +29,7 @@ Features:
 Installation
 ------------
 
-PyNLO requires Python 2, and is tested on Python 2.7 (we are working on Python 3 compatibility). If you don't already have Python, we recommend an "all in one" Python package such as the `Anaconda Python Distribution <https://www.continuum.io/downloads>`_, which is available for free.
+PyNLO requires Python 2, and is tested on Python 2.7 (Python 3 compatibility is a work-in-progress). If you don't already have Python, we recommend an "all in one" Python package such as the `Anaconda Python Distribution <https://www.continuum.io/downloads>`_, which is available for free.
 
 With pip
 ~~~~~~~~
@@ -188,7 +188,7 @@ Here are the results:
 Contributing
 ------------
 
-We welcome suggestions for improvement! The best way to to open a new issue here: https://github.com/pyNLO/PyNLO/issues/.
+We welcome suggestions for improvement, questions, comments, etc. The best way to to open a new issue here: https://github.com/pyNLO/PyNLO/issues/.
 
 
 License

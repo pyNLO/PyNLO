@@ -616,25 +616,25 @@ class Pulse:
         
     
     def add_noise(self, noise_type='sqrt_N_freq'):
-        r""" Add random intensity and phse noise to a pulse. 
-             So far, the only method available is to add gaussian noise to each bin in the frequency domain.
-            
-            Parameters
-            ----------
-            noise_type : string
-                 The method used to add noise. The options are: 
+        r""" 
+         Adds random intensity and phase noise to a pulse. 
         
-                 `sqrt_N_freq` : which adds noise to each bin in the frequency domain, 
-                 where the sigma is proportional to sqrt(N), and where N
-                 is the number of photons in each frequency bin. 
-        
-                 `one_photon_freq` : which adds one photon of noise to each frequency bin, regardless of
-                 the previous value of the electric field in that bin. 
-                 
-            Returns
-            -------
-            nothing
-            """
+        Parameters
+        ----------
+        noise_type : string
+             The method used to add noise. The options are: 
+    
+             ``sqrt_N_freq`` : which adds noise to each bin in the frequency domain, 
+             where the sigma is proportional to sqrt(N), and where N
+             is the number of photons in each frequency bin. 
+    
+             ``one_photon_freq``` : which adds one photon of noise to each frequency bin, regardless of
+             the previous value of the electric field in that bin. 
+             
+        Returns
+        -------
+        nothing
+        """
         
         # This is all to get the number of photons in each frequency bin:
         size_of_bins = np.gradient(self.W_THz)
