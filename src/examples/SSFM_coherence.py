@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import pynlo
 import matplotlib.cm as cm
 import scipy.signal
-import smooth
 
 pulseWL = 1550   # pulse central wavelength (nm)
 
@@ -43,8 +42,12 @@ Points  = 2**13  # simulation points
 
 
 # Coherent (use these parameters for a mostly-coherent pulse)
-FWHM    = 0.2  # pulse duration (ps)
-EPP     = 100e-12 # Energy per pulse (J)
+# FWHM    = 0.2  # pulse duration (ps)
+# EPP     = 100e-12 # Energy per pulse (J)
+
+# Not-so-coherent (use these parameters for a mostly-coherent pulse)
+FWHM    = 0.35  # pulse duration (ps)
+EPP     = 180e-12 # Energy per pulse (J)
 
 
 # Incoherent (use these parameters for a mostly incoherent pulse)
@@ -107,7 +110,6 @@ for y, AW, AT, pulse_out in results:
 g12 = g12.transpose()
 
 g12_line = g12[-1][F>0]
-g12_line = smooth.smooth(g12_line, window_len=11,window='hanning')[:-10]
 
 ax2.plot(F[F>0],g12_line, color='r')
 
