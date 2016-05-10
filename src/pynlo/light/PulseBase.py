@@ -622,9 +622,14 @@ class Pulse:
             Parameters
             ----------
             noise_type : string
-                 The method used to add noise. So far, the only option is `sqrt_N_freq`, which adds noise 
-                 to each bin in the frequency domain, where the sigma is proportional to sqrt(N), and where N
+                 The method used to add noise. The options are: 
+        
+                 `sqrt_N_freq` : which adds noise to each bin in the frequency domain, 
+                 where the sigma is proportional to sqrt(N), and where N
                  is the number of photons in each frequency bin. 
+        
+                 `one_photon_freq` : which adds one photon of noise to each frequency bin, regardless of
+                 the previous value of the electric field in that bin. 
                  
             Returns
             -------

@@ -141,7 +141,7 @@ for num in range(0,trials):
 
     pulse.set_epp(EPP) # set the pulse energy
     
-    pulse.add_noise(noise_type='sqrt_N_freq')
+    pulse.add_noise(noise_type='one_photon_freq')
     
     y, AW, AT, pulse_out = evol.propagate(pulse_in=pulse, fiber=fiber1, n_steps=Steps)
         
@@ -151,7 +151,6 @@ for num in range(0,trials):
         AW_stack = np.dstack((AW, AW_stack))
 
 AW_stack = AW_stack.transpose()
-print np.angle(AW_stack)/np.pi
 
 for n1, E1 in enumerate(AW_stack):
     for n2,E2 in enumerate(AW_stack[np.arange(trials) != n1]):
