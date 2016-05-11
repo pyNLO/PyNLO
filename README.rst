@@ -1,7 +1,9 @@
 pyNLO: Nonlinear optics modeling for Python
 ===========================================
 
-Documentation is available at http://pynlo.readthedocs.org/
+This README is best viewed at http://pynlo.readthedocs.io/en/latest/readme_link.html
+
+Complete documentation is available at http://pynlo.readthedocs.io/
 
 .. image:: https://cloud.githubusercontent.com/assets/1107796/13850062/17f09ea8-ec1e-11e5-9311-b94df29c01cb.png
    :width: 330px
@@ -24,11 +26,10 @@ Features:
 	- ...and much more!
 
 
-
 Installation
 ------------
 
-PyNLO requires Python 2, and is tested on Python 2.7 (we are working on Python 3 compatibility). If you don't already have Python, we recommend an "all in one" Python package such as the `Anaconda Python Distribution <https://www.continuum.io/downloads>`_, which is available for free.
+PyNLO requires Python 2, and is tested on Python 2.7 (Python 3 compatibility is a work-in-progress). If you don't already have Python, we recommend an "all in one" Python package such as the `Anaconda Python Distribution <https://www.continuum.io/downloads>`_, which is available for free.
 
 With pip
 ~~~~~~~~
@@ -187,7 +188,7 @@ Here are the results:
 Contributing
 ------------
 
-We welcome suggestions for improvement! The best way to to open a new issue here: https://github.com/pyNLO/PyNLO/issues/.
+We welcome suggestions for improvement, questions, comments, etc. The best way to to open a new issue here: https://github.com/pyNLO/PyNLO/issues/.
 
 
 License
@@ -196,7 +197,7 @@ PyNLO is licensed under the `GPLv3 license <http://choosealicense.com/licenses/g
 
 
 References
---------
+----------
 [1] Johan Hult, "A Fourth-Order Runge–Kutta in the Interaction Picture Method for Simulating Supercontinuum Generation in Optical Fibers," J. Lightwave Technol. 25, 3770-3775 (2007) https://www.osapublishing.org/jlt/abstract.cfm?uri=jlt-25-12-3770
 
 

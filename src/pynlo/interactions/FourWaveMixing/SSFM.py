@@ -221,8 +221,14 @@ class SSFM:
             plt.xlabel('THz')
             plt.show()
                 
+<<<<<<< HEAD
         # Load up parameter        
         self.A[:]       = self.conditional_fftshift(pulse_in.AT)
+=======
+        # Load up parameters
+        # self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
+        self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=False)
+>>>>>>> refs/remotes/origin/master
         
         self.omegas[:]  = self.conditional_fftshift(self.omegas)
         # self.betas[:]   = self.conditional_fftshift(self.betas)
@@ -755,12 +761,25 @@ class SSFM:
     def conditional_ifftshift(self, x):
         if global_variables.PRE_FFTSHIFT:
             x[:] = ifftshift(x)
+<<<<<<< HEAD
+=======
+            if verify == True:
+                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps*x.shape[0]*2
+>>>>>>> refs/remotes/origin/master
             return x
         else:
             return x
     def conditional_fftshift(self, x):
         if global_variables.PRE_FFTSHIFT:
+<<<<<<< HEAD
             x[:] = fftshift(x)            
+=======
+            if verify == True:
+                chksum = np.sum(abs(x))
+            x[:] = fftshift(x)
+            if verify == True:
+                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps*x.shape[0]*2
+>>>>>>> refs/remotes/origin/master
             return x
         else:
             return x            
