@@ -659,7 +659,7 @@ class SSFM:
                 chksum = np.sum(abs(x))
             x[:] = ifftshift(x)
             if verify == True:
-                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps
+                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps*x.shape[0]*2
             return x
         else:
             return x
@@ -669,7 +669,7 @@ class SSFM:
                 chksum = np.sum(abs(x))
             x[:] = fftshift(x)
             if verify == True:
-                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps
+                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps*x.shape[0]*2
             return x
         else:
             return x            
