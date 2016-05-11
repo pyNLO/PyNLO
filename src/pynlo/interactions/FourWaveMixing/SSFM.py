@@ -18,14 +18,13 @@ This file is part of pyNLO.
 @author: ycasg
 """
 import numpy as np
-
 import matplotlib.pyplot as plt
 from numpy.fft import fftshift, ifftshift
 from pynlo.interactions.FourWaveMixing import global_variables
 from pynlo.light.PulseBase import Pulse
 import gc
 import scipy.fftpack
-
+import math
 
 try:
     import pyfftw
@@ -222,9 +221,7 @@ class SSFM:
             plt.show()
                 
         # Load up parameters
-        # self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
-        self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=False)
-        
+        self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)        
         self.omegas[:]  = self.conditional_fftshift(self.omegas)
         # self.betas[:]   = self.conditional_fftshift(self.betas)
         self.alpha[:]   = self.conditional_fftshift(self.alpha)
@@ -753,23 +750,25 @@ class SSFM:
             return np.linalg.norm(self.Af-self.Ac)/np.linalg.norm(self.Af)
         else:
             return np.linalg.norm(self.Af-self.Ac)
+            
     def conditional_ifftshift(self, x, verify = False):
         if global_variables.PRE_FFTSHIFT:
             if verify == True:
-                chksum = np.sum(abs(x))
+                chksum = math.fsum(abs(x)) # DH: changed from np.sum, since math.fsum is numerically accurate
             x[:] = ifftshift(x)
             if verify == True:
-                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps*x.shape[0]*2
+                assert abs(chksum - math.fsum(abs(x))) <= np.finfo(float).eps*x.shape[0]*2
             return x
         else:
             return x
+            
     def conditional_fftshift(self, x, verify = False):
         if global_variables.PRE_FFTSHIFT:
             if verify == True:
-                chksum = np.sum(abs(x))
+                chksum = math.fsum(abs(x))
             x[:] = fftshift(x)
             if verify == True:
-                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps*x.shape[0]*2
+                assert abs(chksum - math.fsum(abs(x))) <= np.finfo(float).eps*x.shape[0]*2
             return x
         else:
             return x            
