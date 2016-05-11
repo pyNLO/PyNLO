@@ -636,13 +636,15 @@ class Pulse:
         nothing
         """
         
-        # This is all to get the number of photons in each frequency bin:
-        size_of_bins = np.gradient(self.W_THz)
-        energy_per_bin = np.abs(self.AW)**2/size_of_bins * 1e-12
-    
-        h = 6.62607004e-34
-        photon_energy = h * self.W_THz/(2*np.pi) * 1e12
-        photons_per_bin = energy_per_bin/photon_energy
+        # This is all to get the number of photons/second in each frequency bin:
+        size_of_bins = self.dF_mks                          # Bin width in [Hz]
+        power_per_bin = np.abs(self.AW)**2 * size_of_bins  # [W/Hz]  * [Hz]
+            
+        h = constants.Planck # use scipy's constants package
+        
+        #photon_energy = h * self.W_THz/(2*np.pi) * 1e12
+        photon_energy = h * self.F_mks # h nu
+        photons_per_bin = power_per_bin/photon_energy # photons / second
         photons_per_bin[photons_per_bin<0] = 0 # must be positive.
         print np.sum(np.sqrt(photons_per_bin))
         print photons_per_bin.shape
