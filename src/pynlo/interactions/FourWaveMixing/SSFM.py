@@ -72,7 +72,7 @@ class SSFM:
         """
         self.betas[:]  =  fiber.get_betas(pulse_in, z=z)
         # self.alpha[:]  = -fiber.get_gain(pulse_in, output_power) # currently alpha cannot change with z
-        # self.gamma     =  fiber.gamma # currently gamma cannot change as a function of z
+        self.gamma     =  fiber.get_gamma(z=z)
         
         self.betas[:]  = self.conditional_fftshift(self.betas)
         # self.alpha[:]   = self.conditional_fftshift(self.alpha)
@@ -430,7 +430,6 @@ class SSFM:
                         (self.A_I + self.k2/2.0)        
         self.temp[:] = self.IFFT_t_2(self.exp_D*self.FFT_t_2(self.A_I+self.k3))
         self.k4[:] = h * direction * self.NonlinearOperator(self.temp)*self.temp
-        #print np.sum(abs(self.A_I)),np.sum(abs(self.k1)),np.sum(abs(self.k2)),np.sum(abs(self.k3)),np.sum(abs(self.temp)),np.sum(abs(self.k4))
         if not self.suppress_iteration:
             print "ks: ",np.sum(np.abs(self.k1)),np.sum(np.abs(self.k2)),\
                     np.sum(np.abs(self.k3)),np.sum(np.abs(self.k2))
