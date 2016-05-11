@@ -614,6 +614,55 @@ class Pulse:
             """
         self.set_AT(self.AT * np.sqrt( desired_epp_J / self.calc_epp() ) )
         
+    
+    def add_noise(self, noise_type='sqrt_N_freq'):
+        r""" 
+         Adds random intensity and phase noise to a pulse. 
+        
+        Parameters
+        ----------
+        noise_type : string
+             The method used to add noise. The options are: 
+    
+             ``sqrt_N_freq`` : which adds noise to each bin in the frequency domain, 
+             where the sigma is proportional to sqrt(N), and where N
+             is the number of photons in each frequency bin. 
+    
+             ``one_photon_freq``` : which adds one photon of noise to each frequency bin, regardless of
+             the previous value of the electric field in that bin. 
+             
+        Returns
+        -------
+        nothing
+        """
+        
+        # This is all to get the number of photons in each frequency bin:
+        size_of_bins = np.gradient(self.W_THz)
+        energy_per_bin = np.abs(self.AW)**2/size_of_bins * 1e-12
+    
+        h = 6.62607004e-34
+        photon_energy = h * self.W_THz/(2*np.pi) * 1e12
+        photons_per_bin = energy_per_bin/photon_energy
+        photons_per_bin[photons_per_bin<0] = 0 # must be positive.
+        print np.sum(np.sqrt(photons_per_bin))
+        print photons_per_bin.shape
+        
+        # now generate some random intensity and phase arrays:
+        size = np.shape(self.AW)[0]
+        random_intensity = np.random.normal(size=size)
+        random_phase = np.random.uniform(size=size) * 2 * np.pi
+        
+        if noise_type == 'sqrt_N_freq': # this adds Gausian noise with a sigma=sqrt(photons_per_bin)
+            noise = random_intensity * np.sqrt(photons_per_bin) * photon_energy * size_of_bins * 1e12 * np.exp(1j*random_phase)
+        
+        elif noise_type == 'one_photon_freq': # this one photon per bin in the frequecy domain
+            noise = random_intensity * photon_energy * size_of_bins * 1e12 * np.exp(1j*random_phase)
+        else:
+            raise ValueError('noise_type not recognized. So far only sqrt_N_freq is supported')
+        
+        self.set_AW(self.AW + noise)
+        
+        
         
     def chirp_pulse_W(self, GDD, TOD=0, FOD = 0.0, w0_THz = None):
         r""" Alter the phase of the pulse 
