@@ -132,7 +132,7 @@ class FROGPulse(Pulse):
             
             # power -> EPP
             if power_is_avg:
-                power = power / self.frep_Hz
+                power = power / self.frep_mks
             
             # Read in retrieved FROG trace
             frog_data = np.genfromtxt(self.fileloc)

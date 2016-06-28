@@ -18,7 +18,7 @@ import numpy as np
 import scipy.fftpack as fftpack
 from copy import deepcopy
 from scipy import constants
-from pynlo.light import OneDBeam
+from pynlo.light import OneDBeam, OneDBeam_highV_WG
 import exceptions
 from pynlo.light.DerivedPulses import NoisePulse
 from pynlo.light.PulseBase import Pulse
@@ -46,10 +46,13 @@ class dfg_problem:
     sgnl_P_to_a = None
     idlr_P_to_a = None
     _plot_beam_overlaps = False
+    _wg_mode   = False
+    _Aeff_squm      = 0.0
     
     def __init__(self, pump_in, sgnl_in, crystal_in,
                  disable_SPM = False, pump_waist = 10e-6,
-                 apply_gouy_phase = False, plot_beam_overlaps = False):
+                 apply_gouy_phase = False, plot_beam_overlaps = False,
+                 wg_mode = False, Aeff_squm = None):
         """ Initialize DFG problem. The idler field must be derived from the
         signal & idler, as its center frequency is exactly the difference-
         frequency between pump & signal.
@@ -58,10 +61,18 @@ class dfg_problem:
         wavelength-dependent Gouy phase shift. This is disabled by default because
         it is slow (if deemed important it could be sped up by inteprolation, but
         the effect of Gouy phase seems small so it might not be worthwhile.) """
+        self._wg_mode = wg_mode
         
-        self.waist = pump_waist
-        self._calc_gouy = apply_gouy_phase
-        self._plot_beam_overlaps = plot_beam_overlaps
+        if self._wg_mode == False:
+            self.waist = pump_waist
+            self._plot_beam_overlaps = plot_beam_overlaps    
+            self._calc_gouy = apply_gouy_phase
+        else:
+            assert Aeff_squm is not None
+            self._Aeff_squm = Aeff_squm
+            self._plot_beam_overlaps = False
+            self._calc_gouy = apply_gouy_phase                    
+        
 
         # Create idler Pulse.
         
@@ -80,6 +91,8 @@ class dfg_problem:
         if ( max(pump_in.wl_nm) > min(sgnl_in.wl_nm) ): 
             raise exceptions.ValueError("Pump and signal field grids overlap.")
         if ( max(sgnl_in.wl_nm) > min(idlr_in.wl_nm) ):
+            print "sgnl max: ", max(sgnl_in.wl_nm)
+            print "idlr min: ", min(idlr_in.wl_nm)
             raise exceptions.ValueError("Signal and idler field grids overlap.")
         self.idlr_in = idlr_in
 
@@ -98,21 +111,28 @@ class dfg_problem:
         if not pump_in.NPTS == sgnl_in.NPTS == idlr_in.NPTS:
             raise exceptions.ValueError("""Pump, signal, and idler do not have
                                             same length.""")
-        if self.crystal.mode == 'BPM':
-            self.pump_beam = OneDBeam(self.waist, this_pulse = self.pump, axis = 'mix')
-            self.pump_beam.set_waist_to_match_central_waist(self.pump, self.waist, self.crystal)
-            # Pump beam sets all other beams' confocal parameters
-            self.sgnl_beam = OneDBeam(self.waist, this_pulse = self.sgnl ,axis = 'o')    
-            self.sgnl_beam.set_waist_to_match_confocal(self.sgnl, self.pump, self.pump_beam, self.crystal)
-            self.idlr_beam = OneDBeam(self.waist , this_pulse = self.idlr,axis = 'o')
-            self.idlr_beam.set_waist_to_match_confocal(self.idlr, self.pump, self.pump_beam, self.crystal)
+        if self._wg_mode == False:
+            if self.crystal.mode == 'BPM':
+                self.pump_beam = OneDBeam(self.waist, this_pulse = self.pump, axis = 'mix')
+                self.pump_beam.set_waist_to_match_central_waist(self.pump, self.waist, self.crystal)
+                # Pump beam sets all other beams' confocal parameters
+                self.sgnl_beam = OneDBeam(self.waist, this_pulse = self.sgnl ,axis = 'o')    
+                self.sgnl_beam.set_waist_to_match_confocal(self.sgnl, self.pump, self.pump_beam, self.crystal)
+                self.idlr_beam = OneDBeam(self.waist , this_pulse = self.idlr,axis = 'o')
+                self.idlr_beam.set_waist_to_match_confocal(self.idlr, self.pump, self.pump_beam, self.crystal)
+            else:
+                self.pump_beam = OneDBeam(waist_meters = self.waist, this_pulse = self.pump)
+                self.pump_beam.set_waist_to_match_central_waist(self.pump, self.waist, self.crystal)
+                self.sgnl_beam = OneDBeam(waist_meters = self.waist, this_pulse = self.sgnl)
+                self.sgnl_beam.set_waist_to_match_confocal(self.sgnl, self.pump, self.pump_beam, self.crystal)
+                self.idlr_beam = OneDBeam(waist_meters = self.waist, this_pulse = self.idlr)
+                self.idlr_beam.set_waist_to_match_confocal(self.idlr, self.pump, self.pump_beam, self.crystal)
         else:
-            self.pump_beam = OneDBeam(waist_meters = self.waist, this_pulse = self.pump)
-            self.pump_beam.set_waist_to_match_central_waist(self.pump, self.waist, self.crystal)
-            self.sgnl_beam = OneDBeam(waist_meters = self.waist, this_pulse = self.sgnl)
-            self.sgnl_beam.set_waist_to_match_confocal(self.sgnl, self.pump, self.pump_beam, self.crystal)
-            self.idlr_beam = OneDBeam(waist_meters = self.waist, this_pulse = self.idlr)
-            self.idlr_beam.set_waist_to_match_confocal(self.idlr, self.pump, self.pump_beam, self.crystal)
+            # Waveguide mode. Only valid for ZZZ phase matching
+            assert self.crystal.mode != 'BPM'
+            self.pump_beam = OneDBeam_highV_WG(Aeff_squm = self._Aeff_squm, this_pulse = self.pump)
+            self.sgnl_beam = OneDBeam_highV_WG(Aeff_squm = self._Aeff_squm, this_pulse = self.sgnl)
+            self.idlr_beam = OneDBeam_highV_WG(Aeff_squm = self._Aeff_squm, this_pulse = self.idlr)
             
         self.fftobject = fftcomputer(self.veclength)                 
         self.ystart = np.array(np.hstack((self.pump.AW,
@@ -147,6 +167,8 @@ class dfg_problem:
         self.n_p  = self.pump_beam.get_n_in_crystal(self.pump, self.crystal)
         self.n_s  = self.sgnl_beam.get_n_in_crystal(self.sgnl, self.crystal)
         self.n_i  = self.idlr_beam.get_n_in_crystal(self.idlr, self.crystal)        
+
+        self.approx_pulse_speed = constants.speed_of_light / self.n_p        
         
         if not self.disable_SPM:
             [self.jl_p, self.jl_s, self.jl_i] = np.zeros((3, self.veclength))            
@@ -240,9 +262,12 @@ class dfg_problem:
             raise exceptions.AttributeError('Crystal type not known; deff not set.')
         # After epic translation of Dopri853 from Numerical Recipes' C++ to
         # native Python/NumPy, we can use complex numbers throughout:
-        self.phi_p[:] = np.exp(-1j * (self.k_p + self.k_p_0) * z)
-        self.phi_s[:] = np.exp(-1j * (self.k_s + self.k_s_0) * z)
-        self.phi_i[:] = np.exp(-1j * (self.k_i + self.k_i_0) * z)
+        self.phi_p[:] = np.exp(-1j * ((self.k_p + self.k_p_0) * z -
+                                        z/self.approx_pulse_speed * self.pump.W_mks))
+        self.phi_s[:] = np.exp(-1j * ((self.k_s + self.k_s_0) * z -
+                                        z/self.approx_pulse_speed * self.sgnl.W_mks))
+        self.phi_i[:] = np.exp(-1j * ((self.k_i + self.k_i_0) * z -
+                                        z/self.approx_pulse_speed * self.idlr.W_mks))
         z_to_focus = z - self.crystal.length_mks/2.0
         if self._calc_gouy:
             self.phi_p *= self.pump_beam.calculate_gouy_phase(z_to_focus, self.n_p)
@@ -252,12 +277,14 @@ class dfg_problem:
         if not self.disable_SPM:
             self.gen_jl(y)
 
-        waist_p = self.pump_beam.calculate_waist(z_to_focus, n_s = self.n_p)
-        waist_s = self.sgnl_beam.calculate_waist(z_to_focus, n_s = self.n_s)
-        waist_i = self.idlr_beam.calculate_waist(z_to_focus, n_s = self.n_i)
-        R_p = self.pump_beam.calculate_R(z_to_focus,  n_s = self.n_p)
-        R_s = self.sgnl_beam.calculate_R(z_to_focus,  n_s = self.n_s)
-        R_i = self.idlr_beam.calculate_R(z_to_focus,  n_s = self.n_i)
+    
+        if self._wg_mode == False:
+            waist_p = self.pump_beam.calculate_waist(z_to_focus, n_s = self.n_p)
+            waist_s = self.sgnl_beam.calculate_waist(z_to_focus, n_s = self.n_s)
+            waist_i = self.idlr_beam.calculate_waist(z_to_focus, n_s = self.n_i)
+            R_p = self.pump_beam.calculate_R(z_to_focus,  n_s = self.n_p)
+            R_s = self.sgnl_beam.calculate_R(z_to_focus,  n_s = self.n_s)
+            R_i = self.idlr_beam.calculate_R(z_to_focus,  n_s = self.n_i)
 
         # Geometric scaling factors (Not used)
         # P_to_a is the conversion between average power and "effective intensity"
@@ -275,42 +302,48 @@ class dfg_problem:
         # is to match confocal parameters (which is done in __init__, above).
         # Overlap integrals are left intact, in case we want to plot them.
 
-        if (np.mean(waist_p) <= np.mean(waist_s)) and (np.mean(waist_p) <= np.mean(waist_i)):            
-            self.pump_P_to_a = self.pump_beam.rtP_to_a_2(self.pump,self.crystal,z_to_focus)
-            self.sgnl_P_to_a = self.sgnl_beam.rtP_to_a_2(self.sgnl, self.crystal, None, waist_p)
-            self.idlr_P_to_a = self.idlr_beam.rtP_to_a_2(self.idlr, self.crystal, None, waist_p)
-            self.overlap_pump = 1.0
-            self.overlap_sgnl = np.sqrt(self.sgnl_beam.calc_overlap_integral(z_to_focus, self.sgnl, self.pump, self.pump_beam, self.crystal))
-            self.overlap_idlr = np.sqrt(self.idlr_beam.calc_overlap_integral(z_to_focus, self.idlr, self.pump, self.pump_beam, self.crystal))
-        elif np.mean(waist_s) <= np.mean(waist_i):         
-            self.sgnl_P_to_a = self.sgnl_beam.rtP_to_a_2(self.sgnl,self.crystal,z_to_focus)
-            self.pump_P_to_a = self.pump_beam.rtP_to_a_2(self.pump, self.crystal, None, waist_s)
-            self.idlr_P_to_a = self.idlr_beam.rtP_to_a_2(self.idlr, self.crystal, None, waist_s)
-            self.overlap_pump = np.sqrt(self.pump_beam.calc_overlap_integral(z_to_focus, self.pump, self.sgnl, self.sgnl_beam, self.crystal))
-            self.overlap_sgnl = 1.0
-            self.overlap_idlr = np.sqrt(self.idlr_beam.calc_overlap_integral(z_to_focus, self.idlr, self.sgnl, self.sgnl_beam, self.crystal))
-        else:              
-            self.idlr_P_to_a = self.idlr_beam.rtP_to_a_2(self.idlr,self.crystal,  None, waist_i)
-            self.sgnl_P_to_a = self.sgnl_beam.rtP_to_a_2(self.sgnl, self.crystal, None, waist_i)
-            self.pump_P_to_a = self.pump_beam.rtP_to_a_2(self.pump, self.crystal, None, waist_i)
-            self.overlap_pump = np.sqrt(self.pump_beam.calc_overlap_integral(z_to_focus, self.pump, self.idlr, self.idlr_beam, self.crystal))
-            self.overlap_sgnl = np.sqrt(self.sgnl_beam.calc_overlap_integral(z_to_focus, self.sgnl, self.idlr, self.idlr_beam, self.crystal))
-            self.overlap_idlr = 1.0
-
-        if self._plot_beam_overlaps and abs(z-self.last_calc_z) > self.crystal.length_mks*0.001:    
-            plt.subplot(131)
-            plt.plot(z*1e3, np.mean(self.overlap_pump), '.b')
-            plt.plot(z*1e3, np.mean(self.overlap_sgnl), '.k')
-            plt.plot(z*1e3, np.mean(self.overlap_idlr), '.r')
-            plt.subplot(132)
-            plt.plot(z*1e3, np.mean(waist_p)*1e6, '.b')
-            plt.plot(z*1e3, np.mean(waist_s)*1e6, '.k')
-            plt.plot(z*1e3, np.mean(waist_i)*1e6, '.r')
-            plt.subplot(133)
-            plt.plot(z*1e3, np.mean(R_p), '.b')
-            plt.plot(z*1e3, np.mean(R_s), '.k')
-            plt.plot(z*1e3, np.mean(R_i), '.r')
-            self.last_calc_z = z
+        if self._wg_mode == False:
+            if (np.mean(waist_p) <= np.mean(waist_s)) and (np.mean(waist_p) <= np.mean(waist_i)):            
+                self.pump_P_to_a = self.pump_beam.rtP_to_a_2(self.pump,self.crystal,z_to_focus)
+                self.sgnl_P_to_a = self.sgnl_beam.rtP_to_a_2(self.sgnl, self.crystal, None, waist_p)
+                self.idlr_P_to_a = self.idlr_beam.rtP_to_a_2(self.idlr, self.crystal, None, waist_p)
+                self.overlap_pump = 1.0
+                self.overlap_sgnl = np.sqrt(self.sgnl_beam.calc_overlap_integral(z_to_focus, self.sgnl, self.pump, self.pump_beam, self.crystal))
+                self.overlap_idlr = np.sqrt(self.idlr_beam.calc_overlap_integral(z_to_focus, self.idlr, self.pump, self.pump_beam, self.crystal))
+            elif np.mean(waist_s) <= np.mean(waist_i):         
+                self.sgnl_P_to_a = self.sgnl_beam.rtP_to_a_2(self.sgnl,self.crystal,z_to_focus)
+                self.pump_P_to_a = self.pump_beam.rtP_to_a_2(self.pump, self.crystal, None, waist_s)
+                self.idlr_P_to_a = self.idlr_beam.rtP_to_a_2(self.idlr, self.crystal, None, waist_s)
+                self.overlap_pump = np.sqrt(self.pump_beam.calc_overlap_integral(z_to_focus, self.pump, self.sgnl, self.sgnl_beam, self.crystal))
+                self.overlap_sgnl = 1.0
+                self.overlap_idlr = np.sqrt(self.idlr_beam.calc_overlap_integral(z_to_focus, self.idlr, self.sgnl, self.sgnl_beam, self.crystal))
+            else:              
+                self.idlr_P_to_a = self.idlr_beam.rtP_to_a_2(self.idlr,self.crystal,  None, waist_i)
+                self.sgnl_P_to_a = self.sgnl_beam.rtP_to_a_2(self.sgnl, self.crystal, None, waist_i)
+                self.pump_P_to_a = self.pump_beam.rtP_to_a_2(self.pump, self.crystal, None, waist_i)
+                self.overlap_pump = np.sqrt(self.pump_beam.calc_overlap_integral(z_to_focus, self.pump, self.idlr, self.idlr_beam, self.crystal))
+                self.overlap_sgnl = np.sqrt(self.sgnl_beam.calc_overlap_integral(z_to_focus, self.sgnl, self.idlr, self.idlr_beam, self.crystal))
+                self.overlap_idlr = 1.0
+    
+            if self._plot_beam_overlaps and abs(z-self.last_calc_z) > self.crystal.length_mks*0.001:    
+                plt.subplot(131)
+                plt.plot(z*1e3, np.mean(self.overlap_pump), '.b')
+                plt.plot(z*1e3, np.mean(self.overlap_sgnl), '.k')
+                plt.plot(z*1e3, np.mean(self.overlap_idlr), '.r')
+                plt.subplot(132)
+                plt.plot(z*1e3, np.mean(waist_p)*1e6, '.b')
+                plt.plot(z*1e3, np.mean(waist_s)*1e6, '.k')
+                plt.plot(z*1e3, np.mean(waist_i)*1e6, '.r')
+                plt.subplot(133)
+                plt.plot(z*1e3, np.mean(R_p), '.b')
+                plt.plot(z*1e3, np.mean(R_s), '.k')
+                plt.plot(z*1e3, np.mean(R_i), '.r')
+                self.last_calc_z = z
+        else:
+            # Life is simple in waveguide mode (for large V number WG)
+            self.pump_P_to_a = self.pump_beam.rtP_to_a(self.n_p)
+            self.sgnl_P_to_a = self.sgnl_beam.rtP_to_a(self.n_s)
+            self.idlr_P_to_a = self.idlr_beam.rtP_to_a(self.n_i)
             
         self.AsAi[:] =   np.power(self.phi_p, -1.0)*\
             self.fftobject.conv(self.sgnl_P_to_a * self.As(y) * self.phi_s,
@@ -381,10 +414,15 @@ class dfg_problem:
         zs       = solver_out.xsave[0:solver_out.count]
         for i in xrange(solver_out.count):
             z = zs[i]
-            phi_p = np.exp(-1j * (self.k_p + self.k_p_0) * z)
-            phi_s = np.exp(-1j * (self.k_s + self.k_s_0) * z)
-            phi_i = np.exp(-1j * (self.k_i + self.k_i_0) * z)
+            phi_p = np.exp(-1j * ((self.k_p + self.k_p_0) * z-
+                                        z/self.approx_pulse_speed * self.pump.W_mks))
+            phi_s = np.exp(-1j * ((self.k_s + self.k_s_0) * z-
+                                        z/self.approx_pulse_speed * self.sgnl.W_mks))
+            phi_i = np.exp(-1j * ((self.k_i + self.k_i_0) * z-
+                                        z/self.approx_pulse_speed * self.idlr.W_mks))
+
             
+
             pump_out[i, :] *= phi_p
             sgnl_out[i, :] *= phi_s
             idlr_out[i, :] *= phi_i
