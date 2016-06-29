@@ -53,11 +53,13 @@ class FiberInstance:
     fiberspecs  = {}
     poly_order  = None
     gamma       = None
-    def __init__(self):
+    def __init__(self, fiber_db = 'general_fibers',
+                       fiber_db_dir = None):
         self.c_mks = constants.speed_of_light
         self.c = constants.speed_of_light * 1e9/1e12 # c in nm/ps
         self.is_simple_fiber = False
-        self.fiberloader = JSONFiberLoader.JSONFiberLoader('general_fibers')
+        self.fiberloader = JSONFiberLoader.JSONFiberLoader(fiber_db, 
+                                                           fiber_db_dir)
         self.dispersion_changes_with_z = False
         self.gamma_changes_with_z = False
         

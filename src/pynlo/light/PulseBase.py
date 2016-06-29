@@ -188,7 +188,7 @@ class Pulse:
             raise exceptions.RuntimeError('Grids not yet set up.')
     def _get_AT(self):        
         return IFFT_t( self._AW.copy() )
-
+    
     def set_AW(self, AW_new):
         r""" Set the value of the frequency-domain electric field.
         
@@ -614,6 +614,57 @@ class Pulse:
             """
         self.set_AT(self.AT * np.sqrt( desired_epp_J / self.calc_epp() ) )
         
+    
+    def add_noise(self, noise_type='sqrt_N_freq'):
+        r""" 
+         Adds random intensity and phase noise to a pulse. 
+        
+        Parameters
+        ----------
+        noise_type : string
+             The method used to add noise. The options are: 
+    
+             ``sqrt_N_freq`` : which adds noise to each bin in the frequency domain, 
+             where the sigma is proportional to sqrt(N), and where N
+             is the number of photons in each frequency bin. 
+    
+             ``one_photon_freq``` : which adds one photon of noise to each frequency bin, regardless of
+             the previous value of the electric field in that bin. 
+             
+        Returns
+        -------
+        nothing
+        """
+        
+        # This is all to get the number of photons/second in each frequency bin:
+        size_of_bins = self.dF_mks                          # Bin width in [Hz]
+        power_per_bin = np.abs(self.AW)**2 * size_of_bins  # [W/Hz]  * [Hz]
+            
+        h = constants.Planck # use scipy's constants package
+        
+        #photon_energy = h * self.W_THz/(2*np.pi) * 1e12
+        photon_energy = h * self.F_mks # h nu
+        photons_per_bin = power_per_bin/photon_energy # photons / second
+        photons_per_bin[photons_per_bin<0] = 0 # must be positive.
+        print np.sum(np.sqrt(photons_per_bin))
+        print photons_per_bin.shape
+        
+        # now generate some random intensity and phase arrays:
+        size = np.shape(self.AW)[0]
+        random_intensity = np.random.normal(size=size)
+        random_phase = np.random.uniform(size=size) * 2 * np.pi
+        
+        if noise_type == 'sqrt_N_freq': # this adds Gausian noise with a sigma=sqrt(photons_per_bin)
+            noise = random_intensity * np.sqrt(photons_per_bin) * photon_energy * size_of_bins * 1e12 * np.exp(1j*random_phase)
+        
+        elif noise_type == 'one_photon_freq': # this one photon per bin in the frequecy domain
+            noise = random_intensity * photon_energy * size_of_bins * 1e12 * np.exp(1j*random_phase)
+        else:
+            raise ValueError('noise_type not recognized. So far only sqrt_N_freq is supported')
+        
+        self.set_AW(self.AW + noise)
+        
+        
         
     def chirp_pulse_W(self, GDD, TOD=0, FOD = 0.0, w0_THz = None):
         r""" Alter the phase of the pulse 
@@ -666,10 +717,6 @@ class Pulse:
         ampl    = np.abs(spect_w)
         mask = ampl**2 > intensity_threshold * np.max(ampl)**2
         gdd     = np.poly1d(np.polyfit(self.W_THz[mask], phase[mask], 2))
-#        plt.figure()
-#        plt.plot(self.W[mask], phase[mask])
-#        plt.plot(self.W[mask], phase[mask]-gdd(self.W[mask]))
-#        plt.show()
         self.set_AW( ampl * np.exp(1j*(phase-gdd(self.W_THz))) )
     def remove_time_delay(self, intensity_threshold = 0.05):
 
@@ -678,16 +725,40 @@ class Pulse:
         ampl    = np.abs(spect_w)
         mask = ampl**2 > (intensity_threshold * np.max(ampl)**2)        
         ld     = np.poly1d(np.polyfit(self.W_THz[mask], phase[mask], 1))
-#        plt.figure()
-#        plt.plot(self.W[mask], phase[mask])
-#        plt.plot(self.W[mask], phase[mask]-gdd(self.W[mask]))
-#        plt.show()
         self.set_AW( ampl * np.exp(1j*(phase-ld(self.W_THz))) )
     def add_time_offset(self, offset_ps):
         """Shift field in time domain by offset_ps picoseconds. A positive offset
            moves the pulse forward in time. """
         phase_ramp = np.exp(-1j*self.W_THz*offset_ps)
         self.set_AW(self.AW * phase_ramp)
+    def expand_time_window(self, factor_log2, new_pts_loc = "before"):
+        r""" Expand the time window by zero padding.
+        Parameters
+        ----------
+        factor_log2 : integer
+            Factor by which to expand the time window (1 = 2x, 2 = 4x, etc.)
+        new_pts_loc : string
+            Where to put the new points. Valid options are "before", "even", 
+            "after
+        """
+        num_new_pts = self.NPTS*(2**factor_log2 - 1)
+        AT_current = self.AT
+        
+        self.set_NPTS(self.NPTS * 2**factor_log2)        
+        self.set_time_window_ps(self.time_window_ps * 2**factor_log2)
+        self._AW = None # Force generation of new array
+        if new_pts_loc == "before":
+            self.set_AT(np.hstack( (np.zeros(num_new_pts,), AT_current) ))
+        elif new_pts_loc == "after":
+            self.set_AT(np.hstack( (AT_current, np.zeros(num_new_pts,)) ))            
+        elif new_pts_loc == "even":
+            pts_before = int(np.floor(num_new_pts * 0.5))
+            pts_after  = num_new_pts - pts_before
+            self.set_AT(np.hstack( (np.zeros(pts_before,), 
+                                    AT_current, 
+                                    np.zeros(pts_after,)) ))            
+        else:
+            raise ValueError("new_pts_loc must be one of 'before', 'after', 'even'")
     def rotate_spectrum_to_new_center_wl(self, new_center_wl_nm):
         """Change center wavelength of pulse by rotating the electric field in
             the frequency domain. Designed for creating multiple pulses with same
@@ -695,7 +766,7 @@ class Pulse:
             the closest omega."""
         new_center_THz = self._c_nmps/new_center_wl_nm
         rotation = (self.center_frequency_THz-new_center_THz)/self.dF_THz
-        self.set_AW(np.roll(self.AW, int(round(rotation))))
+        self.set_AW(np.roll(self.AW, -1*int(round(rotation))))
     def interpolate_to_new_center_wl(self, new_wavelength_nm):
         r""" Change grids by interpolating the electric field onto a new
         frequency grid, defined by the new center wavelength and the current
