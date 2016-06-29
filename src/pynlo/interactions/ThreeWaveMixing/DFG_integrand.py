@@ -262,12 +262,17 @@ class dfg_problem:
             raise exceptions.AttributeError('Crystal type not known; deff not set.')
         # After epic translation of Dopri853 from Numerical Recipes' C++ to
         # native Python/NumPy, we can use complex numbers throughout:
-        self.phi_p[:] = np.exp(-1j * ((self.k_p + self.k_p_0) * z -
-                                        z/self.approx_pulse_speed * self.pump.W_mks))
-        self.phi_s[:] = np.exp(-1j * ((self.k_s + self.k_s_0) * z -
-                                        z/self.approx_pulse_speed * self.sgnl.W_mks))
-        self.phi_i[:] = np.exp(-1j * ((self.k_i + self.k_i_0) * z -
-                                        z/self.approx_pulse_speed * self.idlr.W_mks))
+#        Apparently this breaks the algorithm?
+#        self.phi_p[:] = np.exp(-1j * ((self.k_p + self.k_p_0) * z -
+#                                        z/self.approx_pulse_speed * self.pump.W_mks))
+#        self.phi_s[:] = np.exp(-1j * ((self.k_s + self.k_s_0) * z -
+#                                        z/self.approx_pulse_speed * self.sgnl.W_mks))
+#        self.phi_i[:] = np.exp(-1j * ((self.k_i + self.k_i_0) * z -
+#                                        z/self.approx_pulse_speed * self.idlr.W_mks))
+        self.phi_p[:] = np.exp(-1j * ((self.k_p + self.k_p_0) * z ))
+        self.phi_s[:] = np.exp(-1j * ((self.k_s + self.k_s_0) * z ))
+        self.phi_i[:] = np.exp(-1j * ((self.k_i + self.k_i_0) * z ))
+                                        
         z_to_focus = z - self.crystal.length_mks/2.0
         if self._calc_gouy:
             self.phi_p *= self.pump_beam.calculate_gouy_phase(z_to_focus, self.n_p)
