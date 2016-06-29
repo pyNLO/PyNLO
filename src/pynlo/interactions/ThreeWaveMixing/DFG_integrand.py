@@ -48,6 +48,7 @@ class dfg_problem:
     _plot_beam_overlaps = False
     _wg_mode   = False
     _Aeff_squm      = 0.0
+    _pump_center_idx = 0.0
     
     def __init__(self, pump_in, sgnl_in, crystal_in,
                  disable_SPM = False, pump_waist = 10e-6,
@@ -166,9 +167,13 @@ class dfg_problem:
         self.k_i    -= self.k_i_0        
         self.n_p  = self.pump_beam.get_n_in_crystal(self.pump, self.crystal)
         self.n_s  = self.sgnl_beam.get_n_in_crystal(self.sgnl, self.crystal)
-        self.n_i  = self.idlr_beam.get_n_in_crystal(self.idlr, self.crystal)        
+        self.n_i  = self.idlr_beam.get_n_in_crystal(self.idlr, self.crystal)      
+        
+        self._pump_center_idx = np.argmax(abs(self.pump.AW))
 
-        self.approx_pulse_speed = constants.speed_of_light / self.n_p        
+        self.approx_pulse_speed = max([max(constants.speed_of_light / self.n_p),
+                                       max(constants.speed_of_light / self.n_s),
+                                       max(constants.speed_of_light / self.n_i)])
         
         if not self.disable_SPM:
             [self.jl_p, self.jl_s, self.jl_i] = np.zeros((3, self.veclength))            
@@ -262,16 +267,12 @@ class dfg_problem:
             raise exceptions.AttributeError('Crystal type not known; deff not set.')
         # After epic translation of Dopri853 from Numerical Recipes' C++ to
         # native Python/NumPy, we can use complex numbers throughout:
-#        Apparently this breaks the algorithm?
-#        self.phi_p[:] = np.exp(-1j * ((self.k_p + self.k_p_0) * z -
-#                                        z/self.approx_pulse_speed * self.pump.W_mks))
-#        self.phi_s[:] = np.exp(-1j * ((self.k_s + self.k_s_0) * z -
-#                                        z/self.approx_pulse_speed * self.sgnl.W_mks))
-#        self.phi_i[:] = np.exp(-1j * ((self.k_i + self.k_i_0) * z -
-#                                        z/self.approx_pulse_speed * self.idlr.W_mks))
-        self.phi_p[:] = np.exp(-1j * ((self.k_p + self.k_p_0) * z ))
-        self.phi_s[:] = np.exp(-1j * ((self.k_s + self.k_s_0) * z ))
-        self.phi_i[:] = np.exp(-1j * ((self.k_i + self.k_i_0) * z ))
+            
+        t = z / self.approx_pulse_speed
+        self.phi_p[:] = np.exp(-1j * ((self.k_p + self.k_p_0) * z - t * self.pump.W_mks))
+        self.phi_s[:] = np.exp(-1j * ((self.k_s + self.k_s_0) * z - t * self.sgnl.W_mks))
+        self.phi_i[:] = np.exp(-1j * ((self.k_i + self.k_i_0) * z - t * self.idlr.W_mks))
+
                                         
         z_to_focus = z - self.crystal.length_mks/2.0
         if self._calc_gouy:
@@ -350,7 +351,7 @@ class dfg_problem:
             self.sgnl_P_to_a = self.sgnl_beam.rtP_to_a(self.n_s)
             self.idlr_P_to_a = self.idlr_beam.rtP_to_a(self.n_i)
             
-        self.AsAi[:] =   np.power(self.phi_p, -1.0)*\
+        self.AsAi[:] =  np.power(self.phi_p, -1.0)*\
             self.fftobject.conv(self.sgnl_P_to_a * self.As(y) * self.phi_s,
                                 self.idlr_P_to_a * self.Ai(y) * self.phi_i)
             
@@ -367,6 +368,19 @@ class dfg_problem:
     
         
         # np.sqrt(2 / (c * eps * pi * waist**2)) converts to electric field        
+        #
+        # From the Seres & Hebling paper,
+        # das/dz + i k as = F(ap, ai)
+        # The change of variables is as = As exp[-ikz], so that
+        #
+        # das/dz = dAs/dz exp[-ikz] - ik As exp[ikz]
+        # das/dz + ik as = ( dAs/dz exp[-ikz] - ik As exp[-ikz] ) + i k As exp[-ikz]
+        #                = dAs/dz exp[-ikz]
+        # The integration is done in the As variables, to remove the fast k
+        # dependent term. The procedure is:
+        #   1) Calculate F(ai(Ai), ap(Ap))
+        #   2) Multiply by exp[+ikz]
+        
         # If the chi-3 terms are included:
         if not self.disable_SPM:
             logging.warn('Warning: this code not updated with correct field-are scaling. Fix it if you use it!')
@@ -387,13 +401,13 @@ class dfg_problem:
             # Only chi-2:
             # pump
             dydx[0  :L  ] =1j * 2 * self.AsAi * self.pump.W_mks * deff / (constants.speed_of_light* self.n_p) / \
-                    (self.pump_P_to_a)
+                    (self.pump_P_to_a) 
             # signal
             dydx[L  :2*L] = 1j * 2 * self.ApAi * self.sgnl.W_mks * deff / (constants.speed_of_light* self.n_s) / \
-                    (self.sgnl_P_to_a)
+                    (self.sgnl_P_to_a) 
             # idler
             dydx[2*L:3*L] = 1j * 2 * self.ApAs * self.idlr.W_mks * deff / (constants.speed_of_light* self.n_i) / \
-                    (self.idlr_P_to_a)
+                    (self.idlr_P_to_a) 
     def process_stepper_output(self, solver_out):
         """ Post-process output of ODE solver.
         
@@ -417,20 +431,24 @@ class dfg_problem:
         sgnl_out = solver_out.ysave[0:solver_out.count, npoints  : 2*npoints]
         idlr_out = solver_out.ysave[0:solver_out.count, 2*npoints: 3*npoints]
         zs       = solver_out.xsave[0:solver_out.count]
+        print 'Pulse velocity is ~ '+str(self.approx_pulse_speed*1e-12)+'mm/fs'
+        print('ks: '+str(self.k_p_0)+' '+str(self.k_s_0)+' '+str(self.k_i_0))
+        
+        
         for i in xrange(solver_out.count):
             z = zs[i]
-            phi_p = np.exp(-1j * ((self.k_p + self.k_p_0) * z-
-                                        z/self.approx_pulse_speed * self.pump.W_mks))
-            phi_s = np.exp(-1j * ((self.k_s + self.k_s_0) * z-
-                                        z/self.approx_pulse_speed * self.sgnl.W_mks))
-            phi_i = np.exp(-1j * ((self.k_i + self.k_i_0) * z-
-                                        z/self.approx_pulse_speed * self.idlr.W_mks))
+            print z
+            t = z / self.approx_pulse_speed
 
-            
+            phi_p = np.exp(-1j * ((self.k_p) * z - t * self.pump.W_mks) )
+            phi_s = np.exp(-1j * ((self.k_s) * z - t * self.sgnl.W_mks))
+            phi_i = np.exp(-1j * ((self.k_i) * z - t * self.idlr.W_mks))
+
 
             pump_out[i, :] *= phi_p
             sgnl_out[i, :] *= phi_s
             idlr_out[i, :] *= phi_i
+
         interface = dfg_results_interface(self, pump_out, sgnl_out, idlr_out, zs)
         return interface
         
@@ -499,6 +517,7 @@ class dfg_results_interface:
         
         self.zs         = z[:]
         self.n_saves = len(z)
+        print('wls: '+str(self.pump_wl)+' '+str(self.sgnl_wl)+' '+str(self.idlr_wl))
         
     def get_z(self, n):
         return self.zs[n]

@@ -40,7 +40,7 @@ print crystal.invert_dfg_qpm_to_signal_wl(1064, 24e-6)
 
 # ODE for finding 'ideal' QPM structure
 # dLambda/dz = 1/phasematching BW
-scale = 4.55e-9
+scale = 4.65e-9
 def dLdz(L, z):
     signal = crystal.invert_dfg_qpm_to_signal_wl(pump_wl, L)
     bw = crystal.calculate_mix_phasematching_bw(pump_wl, signal)
