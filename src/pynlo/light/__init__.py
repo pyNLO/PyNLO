@@ -4,9 +4,10 @@ Created on Thu Apr 03 09:38:19 2014
 
 """
 
-from pynlo.light.PulseBase import Pulse
-from pynlo.light.beam import OneDBeam
+from .PulseBase import Pulse
+from .beam import OneDBeam
 
 from . import beam
 from . import DerivedPulses
 from . import PulseBase
+from .high_V_waveguide import OneDBeam_highV_WG

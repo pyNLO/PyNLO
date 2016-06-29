@@ -56,7 +56,7 @@ class PPLN(Crystal):
         if p.__class__ is tuple:
             self.pp = lambda(x): p[0]
         else:
-            self.pp = lambda(x): p
+            self.pp = lambda(x): p(x)
     def set_T(self, T_degC):
         self.T = T_degC
         
@@ -67,7 +67,8 @@ class PPLN(Crystal):
                 (self.a2 + self.b2*f)/(wl_um**2-(self.a3+self.b3*f)**2) +\
                 (self.a4 + self.b4*f)/(wl_um**2 - self.a5**2) -\
                 (self.a6 + self.b5*f) * wl_um**2)
-    def calculate_poling_period(self, pump_wl_nm, sgnl_wl_nm, idlr_wl_nm, delta_k_L  = 3.2):
+    def calculate_poling_period(self, pump_wl_nm, sgnl_wl_nm, idlr_wl_nm, 
+                                delta_k_L  = 3.2, silent=False):
         """ Calculate poling period [meters] for pump, signal, and idler -- each a 
             PINT object (with units.) If one is None, then it is calculated by
             energy conservation. """
@@ -75,17 +76,20 @@ class PPLN(Crystal):
         new_wl_nm = None
         if pump_wl_nm is None:
             pump_wl_nm = 1.0/(1.0/idlr_wl_nm + 1.0/sgnl_wl_nm)
-            print 'Setting pump to ',pump_wl_nm
+            if not silent:
+                print 'Setting pump to ',pump_wl_nm
             RET_wl_nm = True
             new_wl_nm = pump_wl_nm
         if sgnl_wl_nm is None:
             sgnl_wl_nm = 1.0/(1.0/pump_wl_nm - 1.0/idlr_wl_nm)
-            print 'Setting signal to ',sgnl_wl_nm
+            if not silent:
+                print 'Setting signal to ',sgnl_wl_nm
             RET_wl_nm = True
             new_wl_nm = sgnl_wl_nm
         if idlr_wl_nm is None:
             idlr_wl_nm = 1.0/(1.0/pump_wl_nm - 1.0/sgnl_wl_nm)
-            print 'Setting idler to ',idlr_wl_nm,' nm'
+            if not silent:
+                print 'Setting idler to ',idlr_wl_nm,' nm'
             RET_wl_nm = True
             new_wl_nm = idlr_wl_nm
             
@@ -98,7 +102,8 @@ class PPLN(Crystal):
             delta_k_set_pt = 0
         deltak = kp-ks-ki - delta_k_set_pt
         period_meter = np.pi/deltak*1.0e-9
-        print 'period is ',2.0*period_meter*1.0e6,' um'
+        if not silent:
+            print 'period is ',2.0*period_meter*1.0e6,' um'
         if RET_wl_nm:
             return (period_meter*2, new_wl_nm)
         else:
