@@ -58,3 +58,4 @@ plt.xlabel('Crystal position (mm)')
 plt.ylabel('$\Lambda$ (um)')
 
 np.savetxt('h:\\40mm_ppln_wg_inv.dat', design.T)
+plt.show()

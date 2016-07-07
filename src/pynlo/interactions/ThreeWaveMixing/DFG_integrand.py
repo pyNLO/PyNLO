@@ -49,6 +49,10 @@ class dfg_problem:
     _wg_mode   = False
     _Aeff_squm      = 0.0
     _pump_center_idx = 0.0
+    _prev_pp_boundary = None
+    _next_pp_boundary = None
+    _pp_sign = 1
+    _pp_last = 0
     
     def __init__(self, pump_in, sgnl_in, crystal_in,
                  disable_SPM = False, pump_waist = 10e-6,
@@ -233,14 +237,47 @@ class dfg_problem:
     
     def poling(self, x):
         """ Helper function to get sign of :math: `d_\textrm{eff}` at position
-            :math: `x` in the crystal. Uses self.crystal's pp function.
+            :math: `x` in the crystal. Uses self.crystal's pp function. 
+            
+            For APPLN this is somewhat complicated. The input position x could
+            be many periods away from the previous value, and in either
+            direction. Therefore we need to step around carefully.
+            
+            At each evaluation, set a reference point. This is the LHS (lower z)
+            period boundary. The current sign of the poling is valid from 
+            [LHS : LHS+period/2]. The poling period is evaluated at the LHS.
+            
+            Stepping forward (x > LHS+period/2) is done by setting 
+                LHS    = LHS + period(LHS)/2
+                period = period(LHS)
+            Stepping backward is done by reverting,
+                LHS    = LHS_last - period(LHS)/2
+                period = period(LHS)
+            
             
             Returns
             -------
             x : int
                 Sign (+1 or -1) of :math: `d_\textrm{eff}`.
             """
-        return np.sign(np.sin(2. * np.pi * x / self.crystal.pp(x)))
+        if (x == 0) or (self._prev_pp_boundary is None):
+            self._prev_pp_boundary = 0
+            self._next_pp_boundary = self.crystal.pp(0) / 2.0            
+        if (x > self._next_pp_boundary):
+            #  Advance +z to find the sign of poling at x
+            while (x > self._next_pp_boundary):
+                self._prev_pp_boundary += 0.5* self.crystal.pp(self._prev_pp_boundary)
+                self._next_pp_boundary = self._prev_pp_boundary +\
+                                         0.5* self.crystal.pp(self._prev_pp_boundary)
+                self._pp_sign *= -1
+        else:               
+            if (x < self._prev_pp_boundary):                
+                while (x < self._prev_pp_boundary):
+                    self._prev_pp_boundary -= 0.5* self.crystal.pp(self._prev_pp_boundary)
+                    self._next_pp_boundary = self._prev_pp_boundary +\
+                                             0.5* self.crystal.pp(self._prev_pp_boundary)
+                    self._pp_sign *= -1
+        return self._pp_sign
 
     def Ap(self, y):
         return y[0                  : self.veclength]
@@ -267,8 +304,7 @@ class dfg_problem:
             raise exceptions.AttributeError('Crystal type not known; deff not set.')
         # After epic translation of Dopri853 from Numerical Recipes' C++ to
         # native Python/NumPy, we can use complex numbers throughout:
-            
-        t = z / self.approx_pulse_speed
+        t = z / float(self.approx_pulse_speed)
         self.phi_p[:] = np.exp(-1j * ((self.k_p + self.k_p_0) * z - t * self.pump.W_mks))
         self.phi_s[:] = np.exp(-1j * ((self.k_s + self.k_s_0) * z - t * self.sgnl.W_mks))
         self.phi_i[:] = np.exp(-1j * ((self.k_i + self.k_i_0) * z - t * self.idlr.W_mks))
@@ -434,15 +470,16 @@ class dfg_problem:
         print 'Pulse velocity is ~ '+str(self.approx_pulse_speed*1e-12)+'mm/fs'
         print('ks: '+str(self.k_p_0)+' '+str(self.k_s_0)+' '+str(self.k_i_0))
         
-        
+        pump_pulse_speed = constants.speed_of_light / self.n_p[self._pump_center_idx]
+                                  
         for i in xrange(solver_out.count):
             z = zs[i]
             print z
-            t = z / self.approx_pulse_speed
+            t = z / pump_pulse_speed
 
-            phi_p = np.exp(-1j * ((self.k_p) * z - t * self.pump.W_mks) )
-            phi_s = np.exp(-1j * ((self.k_s) * z - t * self.sgnl.W_mks))
-            phi_i = np.exp(-1j * ((self.k_i) * z - t * self.idlr.W_mks))
+            phi_p = np.exp(-1j * ((self.k_p + self.k_p_0) * z - t * self.pump.W_mks) )
+            phi_s = np.exp(-1j * ((self.k_s + self.k_s_0) * z - t * self.sgnl.W_mks))
+            phi_i = np.exp(-1j * ((self.k_i + self.k_i_0) * z - t * self.idlr.W_mks))
 
 
             pump_out[i, :] *= phi_p
