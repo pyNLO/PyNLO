@@ -305,9 +305,9 @@ class dfg_problem:
         # After epic translation of Dopri853 from Numerical Recipes' C++ to
         # native Python/NumPy, we can use complex numbers throughout:
         t = z / float(self.approx_pulse_speed)
-        self.phi_p[:] = np.exp(-1j * ((self.k_p + self.k_p_0) * z - t * self.pump.W_mks))
-        self.phi_s[:] = np.exp(-1j * ((self.k_s + self.k_s_0) * z - t * self.sgnl.W_mks))
-        self.phi_i[:] = np.exp(-1j * ((self.k_i + self.k_i_0) * z - t * self.idlr.W_mks))
+        self.phi_p[:] = np.exp(1j * ((self.k_p + self.k_p_0) * z - t * self.pump.W_mks))
+        self.phi_s[:] = np.exp(1j * ((self.k_s + self.k_s_0) * z - t * self.sgnl.W_mks))
+        self.phi_i[:] = np.exp(1j * ((self.k_i + self.k_i_0) * z - t * self.idlr.W_mks))
 
                                         
         z_to_focus = z - self.crystal.length_mks/2.0
@@ -477,9 +477,9 @@ class dfg_problem:
             print z
             t = z / pump_pulse_speed
 
-            phi_p = np.exp(-1j * ((self.k_p + self.k_p_0) * z - t * self.pump.W_mks) )
-            phi_s = np.exp(-1j * ((self.k_s + self.k_s_0) * z - t * self.sgnl.W_mks))
-            phi_i = np.exp(-1j * ((self.k_i + self.k_i_0) * z - t * self.idlr.W_mks))
+            phi_p = np.exp(1j * ((self.k_p + self.k_p_0) * z - t * self.pump.W_mks) )
+            phi_s = np.exp(1j * ((self.k_s + self.k_s_0) * z - t * self.sgnl.W_mks))
+            phi_i = np.exp(1j * ((self.k_i + self.k_i_0) * z - t * self.idlr.W_mks))
 
 
             pump_out[i, :] *= phi_p
