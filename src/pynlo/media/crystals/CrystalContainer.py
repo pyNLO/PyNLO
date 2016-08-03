@@ -170,7 +170,16 @@ class Crystal:
         
         return res.x
 
+    def set_caching(self, cache_enable = True):
+        r""" Enable or disable caching of refractive indices. Enabling this uses
+        more memory, but can save costly recomputations
         
+        Parameters
+        ----------
+        cache_enable : bool
+        """
+        assert(cache_enable == True or cache_enable == False)
+        self._enable_caching = cache_enable
     def _get_length_mks(self):
         return self._length
     def _get_length_nm(self):

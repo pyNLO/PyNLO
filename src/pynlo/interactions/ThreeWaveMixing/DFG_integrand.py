@@ -436,13 +436,13 @@ class dfg_problem:
         else:
             # Only chi-2:
             # pump
-            dydx[0  :L  ] =1j * 2 * self.AsAi * self.pump.W_mks * deff / (constants.speed_of_light* self.n_p) / \
+            dydx[0  :L  ] = 1j * 2 * self.AsAi * self.pump.W_mks * deff / (constants.speed_of_light * self.n_p) / \
                     (self.pump_P_to_a) 
             # signal
-            dydx[L  :2*L] = 1j * 2 * self.ApAi * self.sgnl.W_mks * deff / (constants.speed_of_light* self.n_s) / \
+            dydx[L  :2*L] = 1j * 2 * self.ApAi * self.sgnl.W_mks * deff / (constants.speed_of_light * self.n_s) / \
                     (self.sgnl_P_to_a) 
             # idler
-            dydx[2*L:3*L] = 1j * 2 * self.ApAs * self.idlr.W_mks * deff / (constants.speed_of_light* self.n_i) / \
+            dydx[2*L:3*L] = 1j * 2 * self.ApAs * self.idlr.W_mks * deff / (constants.speed_of_light * self.n_i) / \
                     (self.idlr_P_to_a) 
     def process_stepper_output(self, solver_out):
         """ Post-process output of ODE solver.
@@ -475,7 +475,7 @@ class dfg_problem:
         for i in xrange(solver_out.count):
             z = zs[i]
             print z
-            t = z / pump_pulse_speed
+            t =  z / pump_pulse_speed
 
             phi_p = np.exp(1j * ((self.k_p + self.k_p_0) * z - t * self.pump.W_mks) )
             phi_s = np.exp(1j * ((self.k_s + self.k_s_0) * z - t * self.sgnl.W_mks))
