@@ -106,7 +106,8 @@ class dfg_problem:
         self.idlr = deepcopy(idlr_in)
         
         self.crystal = deepcopy(crystal_in)
-        self.precompute_poling()
+        if self.crystal.mode == 'PP':          
+            self.precompute_poling()
         
         self.disable_SPM = disable_SPM 
         
