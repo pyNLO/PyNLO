@@ -25,7 +25,7 @@ from scipy import integrate
 plt.close('all')
 
 npoints = 2**6
-crystallength = 0.46*1e-3
+crystallength = 40*1e-3
 crystal = PPLN(45, length = crystallength)
 
 
@@ -40,11 +40,15 @@ print crystal.invert_dfg_qpm_to_signal_wl(1064, 24e-6)
 
 # ODE for finding 'ideal' QPM structure
 # dLambda/dz = 1/phasematching BW
-scale = 4.65e-9
+scale = 4.65e-9 # for propto BW
+#scale = 1.3e5 # for propto 1/BW
+#scale = 7e-6 / (1e3*crystallength) # for linear chirp 10 um / crystal length
 def dLdz(L, z):
     signal = crystal.invert_dfg_qpm_to_signal_wl(pump_wl, L)
     bw = crystal.calculate_mix_phasematching_bw(pump_wl, signal)
-    return scale*bw
+    #return 1.0/(scale*bw)
+    return (scale*bw)
+    #return scale
 
 zs = np.linspace(0, 40)
 Lambdas = integrate.odeint(dLdz, 24e-6, zs)

@@ -106,6 +106,8 @@ class dfg_problem:
         self.idlr = deepcopy(idlr_in)
         
         self.crystal = deepcopy(crystal_in)
+        if self.crystal.mode == 'PP':          
+            self.precompute_poling()
         
         self.disable_SPM = disable_SPM 
         
@@ -241,18 +243,11 @@ class dfg_problem:
             
             For APPLN this is somewhat complicated. The input position x could
             be many periods away from the previous value, and in either
-            direction. Therefore we need to step around carefully.
+            direction. One solution would be carefully stepping back and forth,
+            but this needs to be perfect to prevent numerical errors. 
             
-            At each evaluation, set a reference point. This is the LHS (lower z)
-            period boundary. The current sign of the poling is valid from 
-            [LHS : LHS+period/2]. The poling period is evaluated at the LHS.
-            
-            Stepping forward (x > LHS+period/2) is done by setting 
-                LHS    = LHS + period(LHS)/2
-                period = period(LHS)
-            Stepping backward is done by reverting,
-                LHS    = LHS_last - period(LHS)/2
-                period = period(LHS)
+            Instead, precompute the domain boundaries and use a big comparison
+            to check the poling(z)
             
             
             Returns
@@ -260,25 +255,28 @@ class dfg_problem:
             x : int
                 Sign (+1 or -1) of :math: `d_\textrm{eff}`.
             """
-        if (x == 0) or (self._prev_pp_boundary is None):
-            self._prev_pp_boundary = 0
-            self._next_pp_boundary = self.crystal.pp(0) / 2.0            
-        if (x > self._next_pp_boundary):
-            #  Advance +z to find the sign of poling at x
-            while (x > self._next_pp_boundary):
-                self._prev_pp_boundary += 0.5* self.crystal.pp(self._prev_pp_boundary)
-                self._next_pp_boundary = self._prev_pp_boundary +\
-                                         0.5* self.crystal.pp(self._prev_pp_boundary)
-                self._pp_sign *= -1
-        else:               
-            if (x < self._prev_pp_boundary):                
-                while (x < self._prev_pp_boundary):
-                    self._prev_pp_boundary -= 0.5* self.crystal.pp(self._prev_pp_boundary)
-                    self._next_pp_boundary = self._prev_pp_boundary +\
-                                             0.5* self.crystal.pp(self._prev_pp_boundary)
-                    self._pp_sign *= -1
-        return self._pp_sign
+        if ((self.domain_lb < x) * (x < self.domain_ub)).any():
+            return -1
+        else:
+            return 1
 
+    def precompute_poling(self):
+        z_current = 0
+        domain_lb = []
+        domain_ub = []
+        while z_current < self.crystal.length_mks:
+            domain_lb.append(z_current+self.crystal.pp(z_current) * 0.5)
+            domain_ub.append(z_current+self.crystal.pp(z_current) * 1.0)
+            z_current += self.crystal.pp(z_current)
+            if self.crystal.pp(z_current) <= 1e-6:
+                print("Error: poling period too small")
+        self.domain_lb = np.array(domain_lb)
+        self.domain_ub = np.array(domain_ub)
+        plt.plot(self.domain_lb)
+        plt.plot(self.domain_ub)
+        
+    
+    
     def Ap(self, y):
         return y[0                  : self.veclength]
     def As(self, y):
@@ -436,13 +434,13 @@ class dfg_problem:
         else:
             # Only chi-2:
             # pump
-            dydx[0  :L  ] =1j * 2 * self.AsAi * self.pump.W_mks * deff / (constants.speed_of_light* self.n_p) / \
+            dydx[0  :L  ] = 1j * 2 * self.AsAi * self.pump.W_mks * deff / (constants.speed_of_light * self.n_p) / \
                     (self.pump_P_to_a) 
             # signal
-            dydx[L  :2*L] = 1j * 2 * self.ApAi * self.sgnl.W_mks * deff / (constants.speed_of_light* self.n_s) / \
+            dydx[L  :2*L] = 1j * 2 * self.ApAi * self.sgnl.W_mks * deff / (constants.speed_of_light * self.n_s) / \
                     (self.sgnl_P_to_a) 
             # idler
-            dydx[2*L:3*L] = 1j * 2 * self.ApAs * self.idlr.W_mks * deff / (constants.speed_of_light* self.n_i) / \
+            dydx[2*L:3*L] = 1j * 2 * self.ApAs * self.idlr.W_mks * deff / (constants.speed_of_light * self.n_i) / \
                     (self.idlr_P_to_a) 
     def process_stepper_output(self, solver_out):
         """ Post-process output of ODE solver.
@@ -475,7 +473,7 @@ class dfg_problem:
         for i in xrange(solver_out.count):
             z = zs[i]
             print z
-            t = z / pump_pulse_speed
+            t =  z / pump_pulse_speed
 
             phi_p = np.exp(1j * ((self.k_p + self.k_p_0) * z - t * self.pump.W_mks) )
             phi_s = np.exp(1j * ((self.k_s + self.k_s_0) * z - t * self.sgnl.W_mks))
