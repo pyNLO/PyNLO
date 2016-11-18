@@ -109,8 +109,8 @@ class Crystal:
     def calculate_mix_phasematching_bw(self, pump_wl_nm, signal_wl_nm, axis = None ):
         r"""Calculate the phase matching bandwidth in the case of mixing
             between narrowband pump (highest photon energy) with a signal field.
-            The bandwidths of mixing between pump-signal and pump-idler are
-            calculated, and the smaller of the two is returned.
+            The bandwidths of mixing between pump-signal, pump-idler, and 
+            signal-idler are calculated, and the smallest is returned.
         
         Parameters
         ----------
@@ -138,8 +138,9 @@ class Crystal:
             pass
         
         deltaOmega_deltaL = np.minimum(np.abs( 0.886 * np.pi / (1.0/vg_s - 1.0/vg_p) ),
-                                   np.abs( 0.886 * np.pi / (1.0/vg_i - 1.0/vg_p) ) )
-        
+                                       np.abs( 0.886 * np.pi / (1.0/vg_i - 1.0/vg_p) ) )
+        deltaOmega_deltaL = np.minimum(deltaOmega_deltaL,
+                                       np.abs( 0.886 * np.pi / (1.0/vg_i - 1.0/vg_s) ) )        
         
         deltak_deltaL = deltaOmega_deltaL * 1.0/speed_of_light
         return deltak_deltaL
@@ -166,10 +167,33 @@ class Crystal:
             return (self.calculate_poling_period(pump_wl_nm, wl_s, None, silent = True)[0] - poling_period_mks )**2
         
         res = optimize.minimize_scalar(err_fn, bounds = [pump_wl_nm*1.001, max_signal_wl_nm],
+                                 method = 'bounded')        
+        return res.x
+    def invert_dfg_qpm_to_pump_wl(self, signal_wl_nm, poling_period_mks, 
+                                    min_pump_wl_nm = 700 ):
+        r"""Calculate the signal wavelength phasematched in QPM by the given
+            poing period for the specified pump wavelength.
+        
+        Parameters
+        ----------
+        signal_wl_nm : float
+             Wavelength of signal field, bandwidth assumed to be 0 [nm]
+        poling_period_mks : float
+             Period length of the QPM grating
+        min_pump_wl_nm : float
+            Lower bound for search
+        Returns
+        -------
+        Pump wavelength [nm] : float
+            
+        """
+
+        def err_fn(wl_p):
+            return (self.calculate_poling_period(wl_p, signal_wl_nm, None, silent = True)[0] - poling_period_mks )**2        
+        res = optimize.minimize_scalar(err_fn, bounds = [min_pump_wl_nm, signal_wl_nm*0.99],
                                  method = 'bounded')
         
         return res.x
-
     def set_caching(self, cache_enable = True):
         r""" Enable or disable caching of refractive indices. Enabling this uses
         more memory, but can save costly recomputations
