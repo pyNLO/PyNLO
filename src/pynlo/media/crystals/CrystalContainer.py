@@ -213,3 +213,22 @@ class Crystal:
     def _damage_threshold_mks(self):
         return self._crystal_properties['damage_threshold_GW_per_sqcm'] * 1.0e13
     damage_threshold_mks = property(_damage_threshold_mks)
+    
+    def alpha(self, wavelength_nm):
+        """
+        Return interpolated value of linear absorption coefficient for LiNb at
+        wavelengths specified.
+        
+        Parameters
+        ----------
+        wavelength_nm : float
+        
+        Returns
+        -------
+        alpha : float or array
+            Absorption coefficient (m^-1)
+        """
+        if np.shape(wavelength_nm) == ():
+            return 0
+        else:
+            return np.zeros(np.shape(wavelength_nm))
