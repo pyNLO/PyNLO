@@ -174,6 +174,13 @@ class dfg_problem:
         self.n_p  = self.pump_beam.get_n_in_crystal(self.pump, self.crystal)
         self.n_s  = self.sgnl_beam.get_n_in_crystal(self.sgnl, self.crystal)
         self.n_i  = self.idlr_beam.get_n_in_crystal(self.idlr, self.crystal)      
+
+        # Absorption coefficients.
+        # dP/dz = -a P
+        # dA/dz = (dP/dz) / (2 rtP) = -a A / 2
+        self.alpha_p = self.crystal.alpha(self.pump.wl_nm) / 2
+        self.alpha_s = self.crystal.alpha(self.sgnl.wl_nm) / 2        
+        self.alpha_i = self.crystal.alpha(self.idlr.wl_nm) / 2         
         
         self._pump_center_idx = np.argmax(abs(self.pump.AW))
 
@@ -435,13 +442,13 @@ class dfg_problem:
             # Only chi-2:
             # pump
             dydx[0  :L  ] = 1j * 2 * self.AsAi * self.pump.W_mks * deff / (constants.speed_of_light * self.n_p) / \
-                    (self.pump_P_to_a) 
+                    (self.pump_P_to_a) - self.alpha_p * self.Ap(y)
             # signal
             dydx[L  :2*L] = 1j * 2 * self.ApAi * self.sgnl.W_mks * deff / (constants.speed_of_light * self.n_s) / \
-                    (self.sgnl_P_to_a) 
+                    (self.sgnl_P_to_a) - self.alpha_s * self.As(y)
             # idler
             dydx[2*L:3*L] = 1j * 2 * self.ApAs * self.idlr.W_mks * deff / (constants.speed_of_light * self.n_i) / \
-                    (self.idlr_P_to_a) 
+                    (self.idlr_P_to_a) - self.alpha_i * self.Ai(y)
     def process_stepper_output(self, solver_out):
         """ Post-process output of ODE solver.
         
