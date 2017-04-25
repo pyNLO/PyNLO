@@ -222,8 +222,7 @@ class SSFM:
             plt.show()
                 
         # Load up parameters
-        # self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
-        self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=False)
+        self.A[:]       = self.conditional_fftshift(pulse_in.AT)
         
         self.omegas[:]  = self.conditional_fftshift(self.omegas)
         # self.betas[:]   = self.conditional_fftshift(self.betas)
@@ -664,7 +663,7 @@ class SSFM:
 
     ### Lots of boring FFT code from here on out.
     def FFT_t(self, A):
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             if global_variables.PRE_FFTSHIFT:
                 self.fft_input[:] = A
                 return self.fft()                
@@ -677,7 +676,7 @@ class SSFM:
             else:
                 return ifftshift(scipy.fftpack.ifft(fftshift(A)))
     def IFFT_t(self, A):        
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             if global_variables.PRE_FFTSHIFT:
                 self.ifft_input[:] = A
                 return self.ifft()
@@ -690,19 +689,19 @@ class SSFM:
             else:
                 return ifftshift(scipy.fftpack.fft(fftshift(A)))
     def FFT_t_shift(self, A):
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             self.fft_input[:] = fftshift(A)
             return ifftshift(self.fft())
         else:
             return ifftshift(scipy.fftpack.ifft(fftshift(A)))
     def IFFT_t_shift(self, A):
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             self.ifft_input[:] = fftshift(A)
             return ifftshift(self.ifft())
         else:
             return ifftshift(scipy.fftpack.fft(fftshift(A)))
     def FFT_t_2(self, A):        
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             if global_variables.PRE_FFTSHIFT:
                 self.fft_input_2[:] = A
                 return self.fft_2()
@@ -715,7 +714,7 @@ class SSFM:
             else:
                 return ifftshift(scipy.fftpack.ifft(fftshift(A)))
     def IFFT_t_2(self, A):        
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             if global_variables.PRE_FFTSHIFT:
                 self.ifft_input_2[:] = A
                 return self.ifft_2()
@@ -728,7 +727,7 @@ class SSFM:
             else:
                 return ifftshift(scipy.fftpack.fft(fftshift(A)))
     def IFFT_t_3(self, A):        
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             if global_variables.PRE_FFTSHIFT:                
                 self.ifft_input_3[:] = A
                 return self.ifft_3()
@@ -753,23 +752,15 @@ class SSFM:
             return np.linalg.norm(self.Af-self.Ac)/np.linalg.norm(self.Af)
         else:
             return np.linalg.norm(self.Af-self.Ac)
-    def conditional_ifftshift(self, x, verify = False):
+    def conditional_ifftshift(self, x):
         if global_variables.PRE_FFTSHIFT:
-            if verify == True:
-                chksum = np.sum(abs(x))
             x[:] = ifftshift(x)
-            if verify == True:
-                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps*x.shape[0]*2
             return x
         else:
             return x
-    def conditional_fftshift(self, x, verify = False):
+    def conditional_fftshift(self, x):
         if global_variables.PRE_FFTSHIFT:
-            if verify == True:
-                chksum = np.sum(abs(x))
             x[:] = fftshift(x)
-            if verify == True:
-                assert abs(chksum - np.sum(abs(x))) <= np.finfo(float).eps*x.shape[0]*2
             return x
         else:
             return x            

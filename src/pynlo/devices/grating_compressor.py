@@ -22,8 +22,13 @@ from scipy import constants, misc, signal, integrate
 import exceptions
 
 class TreacyCompressor:
-    """ Calculate effect of Treacy compressor. This is a calculator which
-        implements eqn 5b from Treacy's 1969 paper: ::
+    """ This class calculates the effects of a grating-based pulse compressor,
+        as described in 
+        E. B. Treacy, "Optical Pulse Compression With Diffraction Gratings",
+        IEEE Journal of Quantum Electronics QE5(9), p454 (1969):
+        http://dx.doi.org/10.1109/JQE.1969.1076303
+        
+        It implements eqn 5b from Treacy1969: ::
         
                                      -4 pi^2 c b 
         {1}  dt/dw =    -------------------------------------

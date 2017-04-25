@@ -41,7 +41,7 @@ class TestCWDFG(unittest.TestCase):
         crystallength = 0.010
         crystal = crystals.AgGaSe2()
         crystal = crystals.AgGaSe2(length = crystallength)
-        
+        crystal.set_caching(True)
         
         n_saves = 10
         
