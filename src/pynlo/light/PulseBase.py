@@ -21,6 +21,9 @@ from scipy import constants, signal
 from pynlo.util import FFT_t, IFFT_t
 import exceptions
 import warnings
+import scipy.ndimage.interpolation
+
+import matplotlib.pyplot as plt # for testing. remove!
 
 class Pulse:
     """Class which carried all information about the light field. This class 
@@ -834,8 +837,10 @@ class Pulse:
         weights = np.sum(abs(self.AW)**2)
         result = avg / (weights * 2.0 * np.pi)
         return result
+        
     def calculate_weighted_avg_wavelength_nm(self):
         return 1.0e9 * self._c_mks / self.calculate_weighted_avg_frequency_mks()
+        
     def calculate_intensity_autocorrelation(self):  
         r""" Calculates and returns the intensity autocorrelation,  
         :math:`\int P(t)P(t+\tau) dt` 
@@ -848,6 +853,7 @@ class Pulse:
             
         """  
         return np.correlate(abs(self.AT)**2, abs(self.AT), mode='same')  
+        
     def write_frog(self,
                  fileloc = 'broadened_er_pulse.dat', # default EDFA spectrum
                  flip_phase = True):
@@ -870,26 +876,38 @@ class Pulse:
         # Write pulse data file
         np.savetxt(self.fileloc, np.vstack((wavel_data, inten_data, phase_data)).T) 
     
-    def spectrogram(self, gate_function_width_ps=0.050, time_steps=500):
-        """
-        This calculates a spectrogram, essentially showing the spectrum
-        as a funcition of time delay. See Dudley Fig. 10, on p1153 for a description
+    def spectrogram(self, gate_type='xfrog', gate_function_width_ps=0.020, time_steps=500):
+        """This calculates a spectrogram, essentially the spectrally-resolved cross-correlation of the pulse.
+        
+        Generally, the gate_type should set to 'xfrog', which performs a cross-correlation similar to the XFROG 
+        experiment, where the pulse is probed by a short, reference pulse. The temporal width of this pulse 
+        is set by the "gate_function_width_ps" parameter.
+        
+        See Dudley Fig. 10, on p1153 for a description
         of the spectrogram in the context of supercontinuum generaiton. 
         (http://dx.doi.org/10.1103/RevModPhys.78.1135)
         
+        Alternatively, the gate_type can be set to 'frog', which performs a regular FROG measurement,
+        where the pulse is probed with a copy of itself, in an autocorrelation fashion.
+        Interpreting FROG spectrogram is less intuitive, so this is mainly useful for comparison
+        with experimentally recorded FROG spectra (which are often easier to acquire than XFROG measurements.)
+        
+        A nice discussion of various FROG "species" is available here: http://frog.gatech.edu/tutorial.html
         
         Parameters
         ----------
-        
+        gate_type : string
+            Determines the type of gate function. Can be either 'xfrog' or 'frog'.
+            Should likely be set to 'xfrog' unless comparing with experiments.
+            See discussion above. Default is 'xfrog'.
         gate_function_width : float
-            the width of the gate function in seconds. Typically something like 
-            0.050 ps (50 fs) is used
-        
+            the width of the gate function in seconds. Only applies when gate_type='xfrog'.
+            A shorter duration provides better temporal resolution, but worse spectral resolution,
+            so this is a trade-off. Typically, 0.01 to 0.1 ps works well.
         time_steps : int
             the number of delay time steps to use. More steps makes a higher 
-            resolution spectrogram, but takes longer to process and plots.
-            ~500 seems about right.
-        
+            resolution spectrogram, but takes longer to process and plot.
+            Default is 500
         
         Returns
         -------
@@ -901,12 +919,11 @@ class Pulse:
             Following the convention of Dudley, the frequency runs along the y-axis
             (axis 0) and the time runs alon the x-axis (axis 1)
         
-        
         Example
         -------
-        
         The spectrogram can be visualized using something like this: ::
-        
+            
+            import matplotlib.pyplot as plt
             plt.figure()
             DELAYS, FREQS, extent, spectrogram = pulse.spectrogram()
             plt.imshow(spectrogram, aspect='auto', extent=extent)
@@ -921,8 +938,6 @@ class Pulse:
         .. image:: https://cloud.githubusercontent.com/assets/1107796/13677657/25075ea4-e6a8-11e5-98b4-7813fa9a6425.png
            :width: 500px
            :alt: example_result
-            
-    
         """
 
         def gauss(x, A=1, mu=0, sigma=1): # gaussian function
@@ -931,15 +946,33 @@ class Pulse:
         t = self.T_ps # working in ps
         
         delay = np.linspace(np.min(t), np.max(t), time_steps)
-        D, T = np.meshgrid(delay, t)
+        D, T  = np.meshgrid(delay, t)
         D, AT = np.meshgrid(delay, self.AT)
         
         phase = np.unwrap(np.angle(AT))
         amp   = np.abs(AT)
         
+                
+        if gate_type == 'xfrog':
+            gate_function = gauss(T, mu=D, sigma=gate_function_width_ps)
+        elif gate_type=='frog':
+            dstep = float(delay[1]-delay[0])
+            tstep = float(    t[1]-    t[0])
+            # calculate the coordinates of the new array
+            dcoord = D*0
+            tcoord = (T-D-np.min(T))/tstep
+            
+            # gate_function = scipy.ndimage.interpolation.map_coordinates(amp, (tcoord, dcoord))
+            
+            gate_function_real = scipy.ndimage.interpolation.map_coordinates(np.real(AT), (tcoord, dcoord))
+            gate_function_imag = scipy.ndimage.interpolation.map_coordinates(np.imag(AT), (tcoord, dcoord))
+            gate_function = gate_function_real + 1j*gate_function_imag
+
+        else:
+            raise ValueError('Type \""%s\"" not recognized. Type must be \"xfrog\" or \"frog\".'%gate_type)
+            
         # make a 2D array of E(time, delay)
-        E = amp * np.cos(2 * np.pi * T * self.center_frequency_THz + phase) * \
-            gauss(T, mu=D, sigma=gate_function_width_ps) # gate function
+        E = amp * gate_function * np.exp(1j*(2 * np.pi * T * self.center_frequency_THz + phase) )
         
         spectrogram = np.fft.fft(E, axis=0)
         freqs = np.fft.fftfreq(np.shape(E)[0], t[1]-t[0])
