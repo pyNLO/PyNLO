@@ -7,7 +7,15 @@ matrix:
       env: DEPS="libgfortran=1.0 numpy=1.9 scipy=0.17 matplotlib=1.4 pillow<3 pandas=0.16 scikit-image=0.11 pyyaml numba=0.20 pytables"
     - python: "3.5"
       env: DEPS="libgfortran=1.0 numpy scipy matplotlib=1.4 pillow<3 pandas scikit-image pyyaml numba pytables"
-
+addons:
+   apt: 
+     packages:
+      - libfftw3-dev 
+      - libatlas-dev 
+      - libatlas-base-dev 
+      - liblapack-dev 
+      - ibblas-dev 
+      - gfortran
 install:
   # See:
   # https://groups.google.com/a/continuum.io/forum/#!topic/conda/RSFENqovnro
