@@ -21,7 +21,6 @@ This file is part of pyNLO.
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy import constants 
-import exceptions
 from pynlo.light.PulseBase import Pulse
 
 class SechPulse(Pulse):
@@ -159,7 +158,7 @@ class FROGPulse(Pulse):
             self.set_AT(self.AT * e_scale )
 
         except IOError:
-            print 'File not found.'
+            print ('File not found.' )
 
 class NoisePulse(Pulse):
     def __init__(self, center_wavelength_nm, time_window_ps = 10., NPTS = 2**8,
@@ -260,4 +259,4 @@ class CWPulse(Pulse):
             self.A  = self.A * e_scale
                 
         except IOError:
-            print 'File not found.'
+            print ('File not found.')

@@ -151,7 +151,7 @@ class OneDBeam:
         k1 = self.get_k_in_crystal(this_pulse, crystal_instance)
         k2 = othr_beam.get_k_in_crystal(othr_pulse, crystal_instance)
 
-        obj_fn = lambda(zr1): -1.0*np.sum((4*k1*k2*zr1*abs(zr2) *\
+        obj_fn = lambda zr1: -1.0*np.sum((4*k1*k2*zr1*abs(zr2) *\
             np.arctan( ((k1 - k2)*L)/(k2*zr1 + k1*abs(zr2)))/\
             ((k1 - k2)*(k2*zr1 + k1*abs(zr2)))))
         

@@ -122,7 +122,7 @@ class FiberInstance:
                 self.betas = np.array(self.fiberspecs["dispersion_data"]) / 1e3
             return 1
         else:
-            print "Error: no dispersion found."
+            print( "Error: no dispersion found.")
             return None
     
     def set_dispersion_function(self, dispersion_function, dispersion_format='GVD'):

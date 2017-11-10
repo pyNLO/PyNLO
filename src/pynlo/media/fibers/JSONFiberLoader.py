@@ -41,7 +41,7 @@ class JSONFiberLoader:
         """ Print list of all fibers in database. """
         self.fiber_names = []
         for each in self.fibers.keys():
-            print 'fiber: ',each
+            print ( 'fiber: ',each )
             self.fiber_names.append(each)
     def get_fiber(self, name):
         """ Retrieve fiber parameters for fiber "name" """

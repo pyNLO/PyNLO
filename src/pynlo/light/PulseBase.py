@@ -19,7 +19,6 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy import constants, signal 
 from pynlo.util import FFT_t, IFFT_t
-import exceptions
 import warnings
 
 class Pulse:
@@ -646,8 +645,8 @@ class Pulse:
         photon_energy = h * self.F_mks # h nu
         photons_per_bin = power_per_bin/photon_energy # photons / second
         photons_per_bin[photons_per_bin<0] = 0 # must be positive.
-        print np.sum(np.sqrt(photons_per_bin))
-        print photons_per_bin.shape
+        print (np.sum(np.sqrt(photons_per_bin)) )
+        print (photons_per_bin.shape )
         
         # now generate some random intensity and phase arrays:
         size = np.shape(self.AW)[0]

@@ -100,15 +100,15 @@ class PPLN(Crystal):
         
         self.deff=  14.9e-12 # from SNLO
         self.n2=   3e-15 / 100**2 # from Nikogosyan
-        self.pp=   lambda(x): 30.49e-6 
+        self.pp=   lambda x: 30.49e-6 
         self._crystal_properties['damage_threshold_GW_per_sqcm'] = 4.0
         self._crystal_properties['damage_threshold_info'] = """ This 4 GW/cm^2 number is from Covesion. According
         to their website, it is from a 200 fs pulses source at 1550 nm."""
     def set_pp(self, p) :
         if p.__class__ is tuple:
-            self.pp = lambda(x): p[0]
+            self.pp = lambda x: p[0]
         else:
-            self.pp = lambda(x): p(x)
+            self.pp = lambda x: p(x)
     def set_T(self, T_degC):
         self.T = T_degC
         self.set_xtalT(T_degC)
@@ -123,19 +123,19 @@ class PPLN(Crystal):
         if pump_wl_nm is None:
             pump_wl_nm = 1.0/(1.0/idlr_wl_nm + 1.0/sgnl_wl_nm)
             if not silent:
-                print 'Setting pump to ',pump_wl_nm
+                print ('Setting pump to ',pump_wl_nm)
             RET_wl_nm = True
             new_wl_nm = pump_wl_nm
         if sgnl_wl_nm is None:
             sgnl_wl_nm = 1.0/(1.0/pump_wl_nm - 1.0/idlr_wl_nm)
             if not silent:
-                print 'Setting signal to ',sgnl_wl_nm
+                print ('Setting signal to ',sgnl_wl_nm)
             RET_wl_nm = True
             new_wl_nm = sgnl_wl_nm
         if idlr_wl_nm is None:
             idlr_wl_nm = 1.0/(1.0/pump_wl_nm - 1.0/sgnl_wl_nm)
             if not silent:
-                print 'Setting idler to ',idlr_wl_nm,' nm'
+                print ('Setting idler to ',idlr_wl_nm,' nm')
             RET_wl_nm = True
             new_wl_nm = idlr_wl_nm
             
@@ -149,7 +149,7 @@ class PPLN(Crystal):
         deltak = kp-ks-ki - delta_k_set_pt
         period_meter = np.pi/deltak*1.0e-9
         if not silent:
-            print 'period is ',2.0*period_meter*1.0e6,' um'
+            print ('period is ',2.0*period_meter*1.0e6,' um')
         if RET_wl_nm:
             return (period_meter*2, new_wl_nm)
         else:
