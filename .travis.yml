@@ -23,7 +23,7 @@ install:
   - which python
   - conda info
   - conda list
-  #- pip install pyfftw
+  - pip install pyfftw
   - python setup.py install
   - echo $PATH
   - ls -lh
