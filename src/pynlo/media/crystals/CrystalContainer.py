@@ -34,11 +34,11 @@ class Crystal:
                             'damage_threshold_info' : ''}
     
     def __init__(self, params):                
-        if params.has_key('length'):            
+        if 'length' in params.keys():
             self._length = params['length']
         else:
             self._length = 1.0
-        if params.has_key('enable_caching'):
+        if 'enable_caching' in params.keys():
             self._enable_caching = params['enable_caching']
         else:
             self._enable_caching = False
@@ -57,7 +57,7 @@ class Crystal:
         """ Return vector of indices of refraction for the pulse_instance's 
             frequency grid inside the crystal """
         if self._enable_caching:
-            if self._cached_ns.has_key(pulse_instance.cache_hash + str(axis)):
+            if pulse_instance.cache_hash + str(axis) in self._cached_ns.keys():
                 return self._cached_ns[pulse_instance.cache_hash + str(axis)]
             else:
                 if axis is None:

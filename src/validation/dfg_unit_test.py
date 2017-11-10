@@ -203,7 +203,7 @@ class TestCW_offset_DFG(unittest.TestCase):
         # Compare integrated and analytic values for idler power
         numeric_idlr    = np.sum(np.abs(idlr_out[:, :])**2, axis=0)
         analytic_idlr   = n_1 * w_2 / (n_2*w_1) *  sgnl_power_in * np.sinh(kappa*z) **2
-        print 'idlr ',max(numeric_idlr), max(analytic_idlr)
+        print ('idlr ',max(numeric_idlr), max(analytic_idlr) )
         
         self.assertLess(abs(np.sum(numeric_sgnl - analytic_sgnl) / np.sum(abs(analytic_sgnl))), 0.01 ) 
         self.assertLess(abs(np.sum(numeric_idlr - analytic_idlr) / np.sum(abs(analytic_idlr))), 0.01 )

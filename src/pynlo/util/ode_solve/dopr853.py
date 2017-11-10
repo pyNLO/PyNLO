@@ -22,7 +22,6 @@ from pynlo.util.ode_solve.steppers import StepperBase
 import numpy as np
 from pynlo.util.ode_solve import dopr853_constants as dc
 from pynlo.util.ode_solve.dopr853_controller import Controller
-import exceptions
 
 class StepperDopr853(StepperBase):
     dtype = None
@@ -62,7 +61,7 @@ class StepperDopr853(StepperBase):
             if success:
                 break
             if abs(h) <= abs(self.x)*self.EPS:
-                e = exceptions.OverflowError('stepsize underflow in StepperDopri853')
+                e = OverflowError('stepsize underflow in StepperDopri853')
                 raise e
         RHS_class.deriv(self.x + h, self.yout, dydxnew)
         if self.dense:
@@ -80,7 +79,7 @@ class StepperDopr853(StepperBase):
         dydx    = self.dydx
         x       = self.x
         if not (y is self.y and dydx is self.dydx and x is self.x):
-            raise exceptions.AssertionError('Oh noes!')
+            raise AssertionError('Oh noes!')
         # 1
         ytemp[:]=self.y+h*dc.a21*self.dydx[:]
         # 2

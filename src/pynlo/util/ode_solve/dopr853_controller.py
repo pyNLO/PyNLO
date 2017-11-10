@@ -18,7 +18,6 @@ This file is part of pyNLO.
 @author: ycasg
 """
 import numpy as np 
-import exceptions
 
 DEBUG = False
 
@@ -38,7 +37,7 @@ class Controller:
        minscale=0.333
        maxscale=6.0
        if np.isnan(h):
-           raise exceptions.AssertionError('stepsize is NaN')
+           raise AssertionError('stepsize is NaN')
        if err <= 1.0:
            if err == 0.0:
                scale = maxscale
@@ -55,13 +54,13 @@ class Controller:
            self.errold = max(err, 1.0e-4)
            self.reject = False           
            if DEBUG:
-               print 'Accept, ',h
+               print ('Accept, ',h)
            return (True, h)
        else:           
 
            scale = max(safe*np.power(err, -alpha), minscale)
            h *= scale
            if DEBUG:
-               print 'Reject, ',h           
+               print ('Reject, ',h)
            self.reject = True
            return (False, h)

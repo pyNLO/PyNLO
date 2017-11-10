@@ -125,7 +125,7 @@ class OneDBeam:
         n2 = othr_beam.get_n_in_crystal(othr_pulse, crystal_instance)
         zr = othr_beam.calculate_zR(n2)  
         w0 = np.sqrt( 2.0*zr*self._lambda0/(2.0*np.pi*n1))
-        self.waist = w0
+        self.set_w0(w0)
         
     def set_waist_to_match_central_waist(self, this_pulse,w0_center,crystal_instance):
         """ Calculate waist w0 for a beam match so that all confocal parameters
@@ -134,7 +134,7 @@ class OneDBeam:
         n1 = self.get_n_in_crystal(this_pulse, crystal_instance)
         zr = (np.pi) * w0_center**2 * (n1[len(n1)>>1]/self._lambda0[len(self._lambda0)>>1])
         w0 = np.sqrt( 2*zr*self._lambda0/(2.0*np.pi*n1))
-        self.waist = w0
+        self.set_w0(w0)
         
     def calc_optimal_beam_overlap_in_crystal(self, this_pulse, othr_pulse, othr_beam,\
                                    crystal_instance, L = None):
