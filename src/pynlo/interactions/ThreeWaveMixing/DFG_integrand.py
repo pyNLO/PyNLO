@@ -84,7 +84,8 @@ class dfg_problem:
         # center frequencies. The center matching is implicitly used in the
         # mixing calculations to conserve energy
         idler_cwl_natural = 1.0/(1.0/pump_in.center_wavelength_nm -\
-                             1.0/sgnl_in.center_wavelength_nm)   
+                             1.0/sgnl_in.center_wavelength_nm)
+
         idlr_in = NoisePulse(center_wavelength_nm   = idler_cwl_natural, 
                              frep_MHz               = pump_in.frep_MHz,
                              NPTS                   = pump_in.NPTS,
@@ -93,6 +94,8 @@ class dfg_problem:
 
         # Double check that fields do not overlap
         if ( max(pump_in.wl_nm) > min(sgnl_in.wl_nm) ): 
+            print ("pump_max: ", max(pump_in.wl_nm))            
+            print ("sgnl min: ", min(sgnl_in.wl_nm))            
             raise ValueError("Pump and signal field grids overlap.")
         if ( max(sgnl_in.wl_nm) > min(idlr_in.wl_nm) ):
             print ("sgnl max: ", max(sgnl_in.wl_nm))

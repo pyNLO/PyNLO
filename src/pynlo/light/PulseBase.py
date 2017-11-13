@@ -64,22 +64,26 @@ class Pulse:
     _cache_W_Hz                     = None
     
     _not_ready_msg = 'Pulse class is not yet ready -- set center wavelength, time window, and npts.'    
+    def load_consts(self):
+        r""" Load constants, needed after unpickling in some cases """
+        self._c_nmps = constants.value('speed of light in vacuum')*1e9/1e12 # c in nm/ps
+        self._c_mks  = constants.value('speed of light in vacuum') # m/s                
     ####### Private properties    #############################################
     def __get_w0(self):
         r""" Return center angular frequency (THz) """
         if self._centerfrequency is None:
-            raise exceptions.ValueError('Center frequency is not set.')
+            raise ValueError('Center frequency is not set.')
         return 2.0 * np.pi * self._centerfrequency    
     def __get_W(self):
         r""" Return angular frequency grid (THz) """
         if not self._ready:
-            raise exceptions.RuntimeError(self._not_ready_msg)
+            raise RuntimeError(self._not_ready_msg)
         else:
             return self._V + self._w0
     def __get_T(self):
         r""" Return temporal grid (ps) """
         if not self._ready:
-            raise exceptions.RuntimeError(self._not_ready_msg)
+            raise RuntimeError(self._not_ready_msg)
         else:
             TGRID =  np.linspace(-self._time_window / 2.0,
                                   self._time_window / 2.0,
@@ -88,14 +92,14 @@ class Pulse:
     def __get_dT(self):
         r""" Return time grid spacing (ps) """
         if not self._ready:
-            raise exceptions.RuntimeError(self._not_ready_msg)
+            raise RuntimeError(self._not_ready_msg)
         else:
             return self._time_window / np.double(self._n)
 
     def __get_V(self):
         r""" Return relative angular frequency grid (THz) """
         if not self._ready:
-            raise exceptions.RuntimeError(self._not_ready_msg)
+            raise RuntimeError(self._not_ready_msg)
         else:
             VGRID = 2.0*np.pi*np.transpose(np.arange(-self._n/2,
                                                       self._n/2))/(self._n*self._dT) # Frequency grid (angular THz)        
@@ -184,10 +188,12 @@ class Pulse:
         if self._AW is not None:
             return self._AW.copy()
         else:
-            raise exceptions.RuntimeError('Grids not yet set up.')
+            raise RuntimeError('Grids not yet set up.')
     def _get_AT(self):        
-        return IFFT_t( self._AW.copy() )
-    
+        if self._AW is not None:
+            return IFFT_t( self._AW.copy() )
+        else:
+            raise RuntimeError('Grids not yet set up.')    
     def set_AW(self, AW_new):
         r""" Set the value of the frequency-domain electric field.
         
@@ -198,7 +204,7 @@ class Pulse:
         
         """
         if not self._ready:
-            raise exceptions.RuntimeError(self._not_ready_msg)
+            raise RuntimeError(self._not_ready_msg)
         if self._AW is None:
             self._AW = np.zeros((self._n,), dtype = np.complex128)
         self._AW[:] = AW_new
@@ -462,11 +468,11 @@ class Pulse:
 
     def _ext_units_nmps(self):
         if self._external_units is None:
-            exceptions.RuntimeError('Unit type has not been set.')
+            RuntimeError('Unit type has not been set.')
         return self._external_units == 'nmps'
     def _ext_units_mks(self):
         if self._external_units is None:
-            exceptions.RuntimeError('Unit type has not been set.')
+            RuntimeError('Unit type has not been set.')
         return self._external_units == 'mks'
 
     ####### Core public  functions     ########################################        
@@ -531,7 +537,7 @@ class Pulse:
         
         """                
         if self._n is None:
-            raise exceptions.RuntimeError('Set number of points before setting time window.')
+            raise RuntimeError('Set number of points before setting time window.')
         # frequency grid is 2 pi/ dT * [-1/2, 1/2]
         # dT is simply time_window / NPTS
         self._set_time_window(T)
@@ -547,7 +553,7 @@ class Pulse:
              New grid time span [s]        
         """                
         if self._n is None:
-            raise exceptions.RuntimeError('Set number of points before setting time window.')        
+            raise RuntimeError('Set number of points before setting time window.')        
         self._set_time_window(T * 1e12)
         
     def set_frequency_window_THz(self, DF):
@@ -563,7 +569,7 @@ class Pulse:
         
         """                
         if self._n is None:
-            raise exceptions.RuntimeError('Set number of points before setting frequency window.')
+            raise RuntimeError('Set number of points before setting frequency window.')
         # Internally, the time window is used to determine the grids. Calculate
         # the time window size as  1 / dF = 1 / (DF / N)
         T = self._n / float(DF)
@@ -581,7 +587,7 @@ class Pulse:
         
         """                
         if self._n is None:
-            raise exceptions.RuntimeError('Set number of points before setting frequency window.')
+            raise RuntimeError('Set number of points before setting frequency window.')
         # Internally, the time window is used to determine the grids. Calculate
         # the time window size as  1 / dF = 1 / (DF / N)
         T = self._n / float(DF)
@@ -800,6 +806,20 @@ class Pulse:
         self.set_center_wavelength_nm(p.center_wavelength_nm)
         self._frep_MHz = p.frep_MHz
         self.set_AT(p.AT)
+    def get_pulse_dict(self):
+        d = {"NPTS" : self.NPTS,
+             "time_window_ps" : self.time_window_ps,
+             "center_wavelength_nm" : self.center_wavelength_nm,
+             "frep_MHz" : self.frep_MHz,
+             "AT_re" : self.AT.real.tolist(),
+             "AT_im" : self.AT.imag.tolist()}
+        return d
+    def load_pulse_dict(self, d):    
+        self.set_NPTS(d["NPTS"])
+        self.set_time_window_ps(d["time_window_ps"])
+        self.set_center_wavelength_nm(d["center_wavelength_nm"])
+        self._frep_MHz = d["frep_MHz"]
+        self.set_AT(np.array(d["AT_re"]) + 1j*np.array(d["AT_im"]) )
     def create_cloned_pulse(self):
         '''Create and return new pulse instance identical to this instance.'''
         p = Pulse()
@@ -811,7 +831,7 @@ class Pulse:
             frequency-grid values from this pulse. """
             
         if NPTS >= self.NPTS:
-            raise exceptions.ValueError("New pulse must have fewer points than existing one.")
+            raise ValueError("New pulse must have fewer points than existing one.")
         p = Pulse()
         center_idx = np.argmin(abs(self.wl_nm - center_wl_nm))
 
