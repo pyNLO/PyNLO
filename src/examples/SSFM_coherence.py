@@ -27,6 +27,10 @@ Steep   = True    # Enable self steepening?
 
 alpha = np.log((10**(Alpha * 0.1))) * 100  # convert from dB/cm to 1/m
 
+# select a method for include noise on the input pulse:
+# noise_type = 'sqrt_N_freq'
+noise_type = 'one_photon_freq'
+
 
 # DRAFT - use these parameters for a quick calculation
 trials  = 2
@@ -89,7 +93,7 @@ pulse = pynlo.light.DerivedPulses.SechPulse(power = 1, # Power will be scaled by
 pulse.set_epp(EPP) # set the pulse energy
 
 g12, results = evol.calculate_coherence(pulse_in=pulse, fiber=fiber1, n_steps=Steps,
-                                        num_trials=trials)
+                                        num_trials=trials, noise_type=noise_type)
 
 def dB(num):
     return 10 * np.log10(np.abs(num)**2)
@@ -104,7 +108,7 @@ for y, AW, AT, pulse_in, pulse_out in results:
 
     zT = dB( np.transpose(AT) )
     ax4.plot(pulse_out.T_ps,     dB(pulse_out.AT),  color = 'r')
-    ax4.plot(pulse.T_ps,     dB(pulse.AT),  color = 'b')
+    ax4.plot(pulse.T_ps,         dB(    pulse.AT),  color = 'b')
 
 
 g12 = g12.transpose()
