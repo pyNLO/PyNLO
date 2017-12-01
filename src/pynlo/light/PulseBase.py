@@ -658,10 +658,10 @@ class Pulse:
         random_phase = np.random.uniform(size=size) * 2 * np.pi
         
         if noise_type == 'sqrt_N_freq': # this adds Gausian noise with a sigma=sqrt(photons_per_bin)
-            noise = random_intensity * np.sqrt(photons_per_bin) * photon_energy * size_of_bins * 1e12 * np.exp(1j*random_phase)
+            noise = random_intensity * np.sqrt(photons_per_bin) * photon_energy * size_of_bins * np.exp(1j*random_phase)
         
         elif noise_type == 'one_photon_freq': # this one photon per bin in the frequecy domain
-            noise = random_intensity * photon_energy * size_of_bins * 1e12 * np.exp(1j*random_phase)
+            noise = random_intensity * photon_energy * size_of_bins * np.exp(1j*random_phase)
         else:
             raise ValueError('noise_type not recognized. So far only sqrt_N_freq is supported')
         
@@ -887,9 +887,9 @@ class Pulse:
         of the spectrogram in the context of supercontinuum generaiton. 
         (http://dx.doi.org/10.1103/RevModPhys.78.1135)
         
-        Alternatively, the gate_type can be set to 'frog', which performs a regular FROG measurement,
+        Alternatively, the gate_type can be set to 'frog', which simulates a SHG-FROG measurement,
         where the pulse is probed with a copy of itself, in an autocorrelation fashion.
-        Interpreting FROG spectrogram is less intuitive, so this is mainly useful for comparison
+        Interpreting this FROG spectrogram is less intuitive, so this is mainly useful for comparison
         with experimentally recorded FROG spectra (which are often easier to acquire than XFROG measurements.)
         
         A nice discussion of various FROG "species" is available here: http://frog.gatech.edu/tutorial.html

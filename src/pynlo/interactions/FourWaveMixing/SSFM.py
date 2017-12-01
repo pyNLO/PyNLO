@@ -584,11 +584,11 @@ class SSFM:
 
             y, AW, AT, pulse_out = self.propagate(pulse_in=pulse, fiber=fiber, n_steps=n_steps)
 
-            results.append((y, AW, AT, pulse_out))
+            results.append((y, AW, AT, pulse_in, pulse_out))
 
         
-        for n1, (y, E1, AT, pulseout) in enumerate(results):
-            for n2, (y, E2, AT, pulseout) in enumerate(results):
+        for n1, (y, E1, AT, pulsein, pulseout) in enumerate(results):
+            for n2, (y, E2, AT, pulsein, pulseout) in enumerate(results):
                 if n1 == n2: continue # don't compare the same trial
 
                 g12 = np.conj(E1)*E2/np.sqrt(np.abs(E1)**2 * np.abs(E2)**2)

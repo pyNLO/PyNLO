@@ -56,7 +56,7 @@ EPP     = 180e-12 # Energy per pulse (J)
 
 
 # set up plots for the results:
-fig = plt.figure(figsize=(13,10))
+fig = plt.figure(figsize=(11,8))
 ax0 = plt.subplot2grid((3,3), (0, 0), rowspan=1)
 ax1 = plt.subplot2grid((3,3), (1, 0), rowspan=2, sharex=ax0)
 
@@ -94,11 +94,11 @@ g12, results = evol.calculate_coherence(pulse_in=pulse, fiber=fiber1, n_steps=St
 def dB(num):
     return 10 * np.log10(np.abs(num)**2)
 
-for y, AW, AT, pulse_out in results:
+for y, AW, AT, pulse_in, pulse_out in results:
     F = pulse_out.F_THz     # Frequency grid of pulse (THz)
     AW = AW.transpose()
     zW = dB(AW[:, (F > 0)] )
-    ax0.plot(F[F>0],    zW[0],  color = 'b')
+    ax0.plot(F[F>0],    zW[0],   color = 'b')
     ax0.plot(F[F>0],    zW[-1],  color = 'r')
     
 
