@@ -28,8 +28,8 @@ Steep   = True    # Enable self steepening?
 alpha = np.log((10**(Alpha * 0.1))) * 100  # convert from dB/cm to 1/m
 
 # select a method for include noise on the input pulse:
-# noise_type = 'sqrt_N_freq'
-noise_type = 'one_photon_freq'
+noise_type = 'sqrt_N_freq'
+# noise_type = 'one_photon_freq'
 
 
 # DRAFT - use these parameters for a quick calculation

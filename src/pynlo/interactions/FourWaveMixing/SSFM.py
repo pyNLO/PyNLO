@@ -580,7 +580,7 @@ class SSFM:
         for num in range(0, num_trials):
 
             pulse = pulse_in.create_cloned_pulse()
-            pulse.add_noise(noise_type='one_photon_freq')
+            pulse.add_noise(noise_type=noise_type)
 
             y, AW, AT, pulse_out = self.propagate(pulse_in=pulse, fiber=fiber, n_steps=n_steps)
 

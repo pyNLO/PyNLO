@@ -641,29 +641,28 @@ class Pulse:
         
         # This is all to get the number of photons/second in each frequency bin:
         size_of_bins = self.dF_mks                          # Bin width in [Hz]
-        power_per_bin = np.abs(self.AW)**2 * size_of_bins  # [W/Hz]  * [Hz]
+        power_per_bin = np.abs(self.AW)**2 / size_of_bins   # [J*Hz] / [Hz] = [J]
             
         h = constants.Planck # use scipy's constants package
         
         #photon_energy = h * self.W_THz/(2*np.pi) * 1e12
-        photon_energy = h * self.F_mks # h nu
+        photon_energy = h * self.F_mks # h nu [J]
         photons_per_bin = power_per_bin/photon_energy # photons / second
         photons_per_bin[photons_per_bin<0] = 0 # must be positive.
-        print np.sum(np.sqrt(photons_per_bin))
-        print photons_per_bin.shape
         
         # now generate some random intensity and phase arrays:
         size = np.shape(self.AW)[0]
-        random_intensity = np.random.normal(size=size)
-        random_phase = np.random.uniform(size=size) * 2 * np.pi
+        random_intensity = np.random.normal( size=size)
+        random_phase     = np.random.uniform(size=size) * 2 * np.pi
         
         if noise_type == 'sqrt_N_freq': # this adds Gausian noise with a sigma=sqrt(photons_per_bin)
+                                                                      # [J]         # [Hz]
             noise = random_intensity * np.sqrt(photons_per_bin) * photon_energy * size_of_bins * np.exp(1j*random_phase)
         
         elif noise_type == 'one_photon_freq': # this one photon per bin in the frequecy domain
             noise = random_intensity * photon_energy * size_of_bins * np.exp(1j*random_phase)
         else:
-            raise ValueError('noise_type not recognized. So far only sqrt_N_freq is supported')
+            raise ValueError('noise_type not recognized.')
         
         self.set_AW(self.AW + noise)
         
