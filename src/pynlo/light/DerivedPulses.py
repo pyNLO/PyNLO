@@ -75,11 +75,41 @@ class GaussianPulse(Pulse):
             self.set_AT(self.AT * np.sqrt( power / ( frep_MHz*1.0e6 * self.calc_epp()) ))
         self.chirp_pulse_W(GDD, TOD)
         self.chirp_pulse_T(chirp2, chirp3, T0_ps)
+    
+class SincPulse(Pulse):
+    def __init__(self, power, FWHM_ps, center_wavelength_nm,
+                 time_window_ps = 10., frep_MHz = 100., NPTS = 2**10, 
+                 GDD = 0, TOD = 0, chirp2 = 0, chirp3 = 0,
+                 power_is_avg = False):
+        """Generate sinc pulse A(t) = sqrt(peak_power[W]) * sin(t/T0)/(t/T0)
+        centered at wavelength center_wavelength_nm (nm).
+        The width is given by FWHM_ps, which is the full-width-at-half-maximum 
+        in picoseconds. T0 is equal th FWHM/3.7909885.
+        time_window_ps sets temporal grid size. Optional GDD and TOD are
+        in ps^2 and ps^3."""
+        Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS)
+        # make sure we weren't passed mks units        
+        assert (center_wavelength_nm > 1.0) 
+        assert (time_window_ps > 1.0 )                
+        self.set_center_wavelength_nm(center_wavelength_nm)        
+        self.set_time_window_ps(time_window_ps)
+
+        T0_ps = FWHM_ps/3.7909885
+        ### Generate pulse
+        if not power_is_avg:
+            # numpy.sinc is sin(pi*x)/(pi*x), so we divide by pi
+            self.set_AT( np.sqrt(power) * np.sinc(self.T_ps/(T0_ps*np.pi)) ) 
+        else:
+            self.set_AT( 1 / np.sinc(np.pi * self.T_ps/(T0_ps*np.pi)) )
+            self.set_AT(self.AT * np.sqrt( power / ( frep_MHz*1.0e6 * self.calc_epp()) ))
+        
+        self.chirp_pulse_W(GDD, TOD)
+        self.chirp_pulse_T(chirp2, chirp3, T0_ps)   
         
 class FROGPulse(Pulse):
     def __init__(self, time_window_ps, center_wavelength_nm, power,frep_MHz = 100., NPTS = 2**10,
                  power_is_avg = False,
-                 fileloc = 'O:\\OFM\\Maser\\FROG\\frog_141020-  7\\Speck.dat', # default EDFA spectrum
+                 fileloc = '',
                  flip_phase = True):
         """Generate pulse from FROG data. Grid is centered at wavelength
         center_wavelength_nm (nm), but pulse properties are loaded from data
@@ -102,7 +132,7 @@ class FROGPulse(Pulse):
             
             # power -> EPP
             if power_is_avg:
-                power = power / self.frep_Hz
+                power = power / self.frep_mks
             
             # Read in retrieved FROG trace
             frog_data = np.genfromtxt(self.fileloc)

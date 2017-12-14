@@ -21,6 +21,9 @@ from scipy import constants, signal
 from pynlo.util import FFT_t, IFFT_t
 import exceptions
 import warnings
+import scipy.ndimage.interpolation
+
+import matplotlib.pyplot as plt # for testing. remove!
 
 class Pulse:
     """Class which carried all information about the light field. This class 
@@ -188,7 +191,7 @@ class Pulse:
             raise exceptions.RuntimeError('Grids not yet set up.')
     def _get_AT(self):        
         return IFFT_t( self._AW.copy() )
-
+    
     def set_AW(self, AW_new):
         r""" Set the value of the frequency-domain electric field.
         
@@ -586,44 +589,7 @@ class Pulse:
         # Internally, the time window is used to determine the grids. Calculate
         # the time window size as  1 / dF = 1 / (DF / N)
         T = self._n / float(DF)
-        self._set_time_window(T * 1e12)            
-
-# Depricated, to be removed:
-#    def set_units(self, external_units):
-#        if external_units == 'nmps':
-#            self.external_c = self._c_nmps
-#            self._external_units = external_units                    
-#        elif external_units == 'mks':
-#            self.external_c = self._c_mks
-#            self._external_units = external_units        
-#        else:
-#            exceptions.ValueError('Unit type ',external_units,' is not known. Valid values are nmps and mks.')            
-#    def internal_time_from_ps(self, time, power = 1):        
-#        """ Convert to internal units of ps"""
-#        if self._ext_units_nmps():
-#            return time
-#        if self._ext_units_mks():
-#            return time * (1e-12)**power
-#    def internal_time_to_ps(self, time, power = 1):
-#        """ Convert from internal units of ps to external time """
-#        if self._ext_units_nmps():
-#            return time
-#        if self._ext_units_mks():
-#            return time * (1e12)**power                    
-#            
-#    def internal_wl_from_nm(self, wl):
-#        """ Convert to internal units of nm """
-#        if self._ext_units_nmps():
-#            return wl
-#        if self._ext_units_mks():
-#            return wl * 1e-9
-#    def internal_wl_to_nm(self, wl):
-#        """ Convert from internal units of nm to external units """
-#        if self._ext_units_nmps():
-#            return wl
-#        if self._ext_units_mks():
-#            return wl * 1e9
-                
+        self._set_time_window(T * 1e12)                            
 
     ####### Auxiliary public  functions     ###################################
     def calc_epp(self):
@@ -650,6 +616,56 @@ class Pulse:
             nothing
             """
         self.set_AT(self.AT * np.sqrt( desired_epp_J / self.calc_epp() ) )
+        
+    
+    def add_noise(self, noise_type='sqrt_N_freq'):
+        r""" 
+         Adds random intensity and phase noise to a pulse. 
+        
+        Parameters
+        ----------
+        noise_type : string
+             The method used to add noise. The options are: 
+    
+             ``sqrt_N_freq`` : which adds noise to each bin in the frequency domain, 
+             where the sigma is proportional to sqrt(N), and where N
+             is the number of photons in each frequency bin. 
+    
+             ``one_photon_freq``` : which adds one photon of noise to each frequency bin, regardless of
+             the previous value of the electric field in that bin. 
+             
+        Returns
+        -------
+        nothing
+        """
+        
+        # This is all to get the number of photons/second in each frequency bin:
+        size_of_bins = self.dF_mks                          # Bin width in [Hz]
+        power_per_bin = np.abs(self.AW)**2 / size_of_bins   # [J*Hz] / [Hz] = [J]
+            
+        h = constants.Planck # use scipy's constants package
+        
+        #photon_energy = h * self.W_THz/(2*np.pi) * 1e12
+        photon_energy = h * self.F_mks # h nu [J]
+        photons_per_bin = power_per_bin/photon_energy # photons / second
+        photons_per_bin[photons_per_bin<0] = 0 # must be positive.
+        
+        # now generate some random intensity and phase arrays:
+        size = np.shape(self.AW)[0]
+        random_intensity = np.random.normal( size=size)
+        random_phase     = np.random.uniform(size=size) * 2 * np.pi
+        
+        if noise_type == 'sqrt_N_freq': # this adds Gausian noise with a sigma=sqrt(photons_per_bin)
+                                                                      # [J]         # [Hz]
+            noise = random_intensity * np.sqrt(photons_per_bin) * photon_energy * size_of_bins * np.exp(1j*random_phase)
+        
+        elif noise_type == 'one_photon_freq': # this one photon per bin in the frequecy domain
+            noise = random_intensity * photon_energy * size_of_bins * np.exp(1j*random_phase)
+        else:
+            raise ValueError('noise_type not recognized.')
+        
+        self.set_AW(self.AW + noise)
+        
         
         
     def chirp_pulse_W(self, GDD, TOD=0, FOD = 0.0, w0_THz = None):
@@ -703,10 +719,6 @@ class Pulse:
         ampl    = np.abs(spect_w)
         mask = ampl**2 > intensity_threshold * np.max(ampl)**2
         gdd     = np.poly1d(np.polyfit(self.W_THz[mask], phase[mask], 2))
-#        plt.figure()
-#        plt.plot(self.W[mask], phase[mask])
-#        plt.plot(self.W[mask], phase[mask]-gdd(self.W[mask]))
-#        plt.show()
         self.set_AW( ampl * np.exp(1j*(phase-gdd(self.W_THz))) )
     def remove_time_delay(self, intensity_threshold = 0.05):
 
@@ -715,16 +727,40 @@ class Pulse:
         ampl    = np.abs(spect_w)
         mask = ampl**2 > (intensity_threshold * np.max(ampl)**2)        
         ld     = np.poly1d(np.polyfit(self.W_THz[mask], phase[mask], 1))
-#        plt.figure()
-#        plt.plot(self.W[mask], phase[mask])
-#        plt.plot(self.W[mask], phase[mask]-gdd(self.W[mask]))
-#        plt.show()
         self.set_AW( ampl * np.exp(1j*(phase-ld(self.W_THz))) )
     def add_time_offset(self, offset_ps):
         """Shift field in time domain by offset_ps picoseconds. A positive offset
            moves the pulse forward in time. """
         phase_ramp = np.exp(-1j*self.W_THz*offset_ps)
         self.set_AW(self.AW * phase_ramp)
+    def expand_time_window(self, factor_log2, new_pts_loc = "before"):
+        r""" Expand the time window by zero padding.
+        Parameters
+        ----------
+        factor_log2 : integer
+            Factor by which to expand the time window (1 = 2x, 2 = 4x, etc.)
+        new_pts_loc : string
+            Where to put the new points. Valid options are "before", "even", 
+            "after
+        """
+        num_new_pts = self.NPTS*(2**factor_log2 - 1)
+        AT_current = self.AT
+        
+        self.set_NPTS(self.NPTS * 2**factor_log2)        
+        self.set_time_window_ps(self.time_window_ps * 2**factor_log2)
+        self._AW = None # Force generation of new array
+        if new_pts_loc == "before":
+            self.set_AT(np.hstack( (np.zeros(num_new_pts,), AT_current) ))
+        elif new_pts_loc == "after":
+            self.set_AT(np.hstack( (AT_current, np.zeros(num_new_pts,)) ))            
+        elif new_pts_loc == "even":
+            pts_before = int(np.floor(num_new_pts * 0.5))
+            pts_after  = num_new_pts - pts_before
+            self.set_AT(np.hstack( (np.zeros(pts_before,), 
+                                    AT_current, 
+                                    np.zeros(pts_after,)) ))            
+        else:
+            raise ValueError("new_pts_loc must be one of 'before', 'after', 'even'")
     def rotate_spectrum_to_new_center_wl(self, new_center_wl_nm):
         """Change center wavelength of pulse by rotating the electric field in
             the frequency domain. Designed for creating multiple pulses with same
@@ -732,13 +768,34 @@ class Pulse:
             the closest omega."""
         new_center_THz = self._c_nmps/new_center_wl_nm
         rotation = (self.center_frequency_THz-new_center_THz)/self.dF_THz
-        self.set_AW(np.roll(self.AW, int(round(rotation))))
+        self.set_AW(np.roll(self.AW, -1*int(round(rotation))))
+    def interpolate_to_new_center_wl(self, new_wavelength_nm):
+        r""" Change grids by interpolating the electric field onto a new
+        frequency grid, defined by the new center wavelength and the current
+        pulse parameters. This is useful when grid overlaps must be avoided,
+        for example in difference or sum frequency generation.
+                
+        Parameters
+        ----------
+        new_wavelength_nm : float
+             New center wavelength [nm]
+        Returns
+        -------
+        Pulse instance        
+        """                
+        working_pulse = self.create_cloned_pulse()
+        working_pulse.set_center_wavelength_nm(new_wavelength_nm)
+        interpolator = interp1d(self.W_mks, self. AW,
+                                bounds_error = False,
+                                fill_value = 0.0)
+        working_pulse.set_AW(interpolator(working_pulse.W_mks))
+        return working_pulse
+        
     def filter_by_wavelength_nm(self, lower_wl_nm, upper_wl_nm):
         AW_new = self.AW
         AW_new[self.wl_nm < lower_wl_nm] = 0.0
         AW_new[self.wl_nm > upper_wl_nm] = 0.0
-        self.set_AW(AW_new)
-        
+        self.set_AW(AW_new)        
     def clone_pulse(self, p):
         '''Copy all parameters of pulse_instance into this one'''
         self.set_NPTS(p.NPTS)
@@ -779,8 +836,10 @@ class Pulse:
         weights = np.sum(abs(self.AW)**2)
         result = avg / (weights * 2.0 * np.pi)
         return result
+        
     def calculate_weighted_avg_wavelength_nm(self):
         return 1.0e9 * self._c_mks / self.calculate_weighted_avg_frequency_mks()
+        
     def calculate_intensity_autocorrelation(self):  
         r""" Calculates and returns the intensity autocorrelation,  
         :math:`\int P(t)P(t+\tau) dt` 
@@ -793,6 +852,7 @@ class Pulse:
             
         """  
         return np.correlate(abs(self.AT)**2, abs(self.AT), mode='same')  
+        
     def write_frog(self,
                  fileloc = 'broadened_er_pulse.dat', # default EDFA spectrum
                  flip_phase = True):
@@ -815,26 +875,38 @@ class Pulse:
         # Write pulse data file
         np.savetxt(self.fileloc, np.vstack((wavel_data, inten_data, phase_data)).T) 
     
-    def spectrogram(self, gate_function_width_ps=0.050, time_steps=500):
-        """
-        This calculates a spectrogram, essentially showing the spectrum
-        as a funcition of time delay. See Dudley Fig. 10, on p1153 for a description
+    def spectrogram(self, gate_type='xfrog', gate_function_width_ps=0.020, time_steps=500):
+        """This calculates a spectrogram, essentially the spectrally-resolved cross-correlation of the pulse.
+        
+        Generally, the gate_type should set to 'xfrog', which performs a cross-correlation similar to the XFROG 
+        experiment, where the pulse is probed by a short, reference pulse. The temporal width of this pulse 
+        is set by the "gate_function_width_ps" parameter.
+        
+        See Dudley Fig. 10, on p1153 for a description
         of the spectrogram in the context of supercontinuum generaiton. 
         (http://dx.doi.org/10.1103/RevModPhys.78.1135)
         
+        Alternatively, the gate_type can be set to 'frog', which simulates a SHG-FROG measurement,
+        where the pulse is probed with a copy of itself, in an autocorrelation fashion.
+        Interpreting this FROG spectrogram is less intuitive, so this is mainly useful for comparison
+        with experimentally recorded FROG spectra (which are often easier to acquire than XFROG measurements.)
+        
+        A nice discussion of various FROG "species" is available here: http://frog.gatech.edu/tutorial.html
         
         Parameters
         ----------
-        
+        gate_type : string
+            Determines the type of gate function. Can be either 'xfrog' or 'frog'.
+            Should likely be set to 'xfrog' unless comparing with experiments.
+            See discussion above. Default is 'xfrog'.
         gate_function_width : float
-            the width of the gate function in seconds. Typically something like 
-            0.050 ps (50 fs) is used
-        
+            the width of the gate function in seconds. Only applies when gate_type='xfrog'.
+            A shorter duration provides better temporal resolution, but worse spectral resolution,
+            so this is a trade-off. Typically, 0.01 to 0.1 ps works well.
         time_steps : int
             the number of delay time steps to use. More steps makes a higher 
-            resolution spectrogram, but takes longer to process and plots.
-            ~500 seems about right.
-        
+            resolution spectrogram, but takes longer to process and plot.
+            Default is 500
         
         Returns
         -------
@@ -846,12 +918,11 @@ class Pulse:
             Following the convention of Dudley, the frequency runs along the y-axis
             (axis 0) and the time runs alon the x-axis (axis 1)
         
-        
         Example
         -------
-        
         The spectrogram can be visualized using something like this: ::
-        
+            
+            import matplotlib.pyplot as plt
             plt.figure()
             DELAYS, FREQS, extent, spectrogram = pulse.spectrogram()
             plt.imshow(spectrogram, aspect='auto', extent=extent)
@@ -866,8 +937,6 @@ class Pulse:
         .. image:: https://cloud.githubusercontent.com/assets/1107796/13677657/25075ea4-e6a8-11e5-98b4-7813fa9a6425.png
            :width: 500px
            :alt: example_result
-            
-    
         """
 
         def gauss(x, A=1, mu=0, sigma=1): # gaussian function
@@ -876,15 +945,33 @@ class Pulse:
         t = self.T_ps # working in ps
         
         delay = np.linspace(np.min(t), np.max(t), time_steps)
-        D, T = np.meshgrid(delay, t)
+        D, T  = np.meshgrid(delay, t)
         D, AT = np.meshgrid(delay, self.AT)
         
         phase = np.unwrap(np.angle(AT))
         amp   = np.abs(AT)
         
+                
+        if gate_type == 'xfrog':
+            gate_function = gauss(T, mu=D, sigma=gate_function_width_ps)
+        elif gate_type=='frog':
+            dstep = float(delay[1]-delay[0])
+            tstep = float(    t[1]-    t[0])
+            # calculate the coordinates of the new array
+            dcoord = D*0
+            tcoord = (T-D-np.min(T))/tstep
+            
+            # gate_function = scipy.ndimage.interpolation.map_coordinates(amp, (tcoord, dcoord))
+            
+            gate_function_real = scipy.ndimage.interpolation.map_coordinates(np.real(AT), (tcoord, dcoord))
+            gate_function_imag = scipy.ndimage.interpolation.map_coordinates(np.imag(AT), (tcoord, dcoord))
+            gate_function = gate_function_real + 1j*gate_function_imag
+
+        else:
+            raise ValueError('Type \""%s\"" not recognized. Type must be \"xfrog\" or \"frog\".'%gate_type)
+            
         # make a 2D array of E(time, delay)
-        E = amp * np.cos(2 * np.pi * T * self.center_frequency_THz + phase) * \
-            gauss(T, mu=D, sigma=gate_function_width_ps) # gate function
+        E = amp * gate_function * np.exp(1j*(2 * np.pi * T * self.center_frequency_THz + phase) )
         
         spectrogram = np.fft.fft(E, axis=0)
         freqs = np.fft.fftfreq(np.shape(E)[0], t[1]-t[0])

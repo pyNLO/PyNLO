@@ -19,7 +19,7 @@ This file is part of pyNLO.
 """
 import exceptions
 import numpy as np
-from scipy import misc
+from scipy import misc, optimize
 from scipy.constants import speed_of_light
 
 class Crystal:
@@ -106,6 +106,80 @@ class Crystal:
         D = self.calculate_D_ps_nm_km(wavelengths_nm, axis)
         scale = 1.0
         return D * scale
+    def calculate_mix_phasematching_bw(self, pump_wl_nm, signal_wl_nm, axis = None ):
+        r"""Calculate the phase matching bandwidth in the case of mixing
+            between narrowband pump (highest photon energy) with a signal field.
+            The bandwidths of mixing between pump-signal and pump-idler are
+            calculated, and the smaller of the two is returned.
+        
+        Parameters
+        ----------
+        pump_wl_nm : float
+             Wavelength of pump field, bandwidth assumed to be 0 [nm]
+        signal_wl_nm : array-like
+             Wavelength of signal field [nm]
+
+        Returns
+        -------
+        acceptance bandwidth : float
+            Phasematching bandwidth [m^-1 * m]
+            
+        References
+        ----------
+        Peter E Powers, "Fundamentals of Nonlinear Optics", pp 106
+        """
+        idler_wl_nm = 1.0/(1.0/pump_wl_nm - 1.0/signal_wl_nm)
+        vg_s = self.calculate_group_velocity_nm_ps(signal_wl_nm, axis)*1e3 # m/s
+        vg_i = self.calculate_group_velocity_nm_ps(idler_wl_nm,  axis)*1e3 # m/s
+        vg_p = self.calculate_group_velocity_nm_ps(pump_wl_nm,   axis)*1e3 # m/s
+        try:
+            vg_p = np.ones((len(vg_s),)) * vg_p
+        except TypeError:
+            pass
+        
+        deltaOmega_deltaL = np.minimum(np.abs( 0.886 * np.pi / (1.0/vg_s - 1.0/vg_p) ),
+                                   np.abs( 0.886 * np.pi / (1.0/vg_i - 1.0/vg_p) ) )
+        
+        
+        deltak_deltaL = deltaOmega_deltaL * 1.0/speed_of_light
+        return deltak_deltaL
+
+    def invert_dfg_qpm_to_signal_wl(self, pump_wl_nm, poling_period_mks, 
+                                    max_signal_wl_nm = 2000 ):
+        r"""Calculate the signal wavelength phasematched in QPM by the given
+            poing period for the specified pump wavelength.
+        
+        Parameters
+        ----------
+        pump_wl_nm : float
+             Wavelength of pump field, bandwidth assumed to be 0 [nm]
+        poling_period_mks : float
+             Period length of the QPM grating
+
+        Returns
+        -------
+        Signal wavelength [nm] : float
+            
+        """
+
+        def err_fn(wl_s):
+            return (self.calculate_poling_period(pump_wl_nm, wl_s, None, silent = True)[0] - poling_period_mks )**2
+        
+        res = optimize.minimize_scalar(err_fn, bounds = [pump_wl_nm*1.001, max_signal_wl_nm],
+                                 method = 'bounded')
+        
+        return res.x
+
+    def set_caching(self, cache_enable = True):
+        r""" Enable or disable caching of refractive indices. Enabling this uses
+        more memory, but can save costly recomputations
+        
+        Parameters
+        ----------
+        cache_enable : bool
+        """
+        assert(cache_enable == True or cache_enable == False)
+        self._enable_caching = cache_enable
     def _get_length_mks(self):
         return self._length
     def _get_length_nm(self):

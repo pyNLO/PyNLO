@@ -72,7 +72,7 @@ class SSFM:
         """
         self.betas[:]  =  fiber.get_betas(pulse_in, z=z)
         # self.alpha[:]  = -fiber.get_gain(pulse_in, output_power) # currently alpha cannot change with z
-        # self.gamma     =  fiber.gamma # currently gamma cannot change as a function of z
+        self.gamma     =  fiber.get_gamma(z=z)
         
         self.betas[:]  = self.conditional_fftshift(self.betas)
         # self.alpha[:]   = self.conditional_fftshift(self.alpha)
@@ -191,38 +191,39 @@ class SSFM:
 
         self.last_h    =  None      
 
-        if not self.disable_Raman:
-            
-            self.CalculateRamanResponseFT(pulse_in)
-            
-            if raman_plots:
-                plt.subplot(221)
-                plt.plot(self.omegas/(2*np.pi), np.abs(self.R - (1-self.f_R)),'bo')                
-                plt.plot(self.omegas/(2*np.pi), np.abs(self.R0 - (1-self.f_R0)),'r')
-                #plt.xlim([0,25])
-                plt.title('Abs[R(w)]')
-                plt.xlabel('THz')                
-                plt.subplot(222)
-                plt.plot(self.omegas/(2*np.pi), np.unwrap(np.angle(self.R-(1-self.f_R))),'bo')
-                plt.plot(self.omegas/(2*np.pi), np.unwrap(np.angle(self.R0-(1-self.f_R0))),'r')                
-                plt.title('Angle[R(w)]')
-                plt.xlabel('THz')
-                plt.subplot(223)
-                plt.plot(pulse_in.T*1000, ifftshift(np.real(self.IFFT_t(\
-                        self.R - (1-self.f_R)))), 'bo')
-                plt.plot(pulse_in.T*1000, ifftshift(np.real(self.IFFT_t(\
-                        self.R0 - (1-self.f_R0)))), 'r')  
-                plt.title('Abs[R[t]]')
-                plt.xlim([0,1000])
-                plt.xlabel('fs')
-                plt.subplot(224)
-                plt.plot(self.omegas/(2*np.pi), abs(self.FFT_t(self.A)))
-                plt.title('Abs[A[w]]')
-                plt.xlabel('THz')
-                plt.show()
+        # if not self.disable_Raman:
+        
+        self.CalculateRamanResponseFT(pulse_in)
+
+        if raman_plots:
+            plt.subplot(221)
+            plt.plot(self.omegas/(2*np.pi), np.abs(self.R - (1-self.f_R)),'bo')
+            plt.plot(self.omegas/(2*np.pi), np.abs(self.R0 - (1-self.f_R0)),'r')
+            #plt.xlim([0,25])
+            plt.title('Abs[R(w)]')
+            plt.xlabel('THz')
+            plt.subplot(222)
+            plt.plot(self.omegas/(2*np.pi), np.unwrap(np.angle(self.R-(1-self.f_R))),'bo')
+            plt.plot(self.omegas/(2*np.pi), np.unwrap(np.angle(self.R0-(1-self.f_R0))),'r')
+            plt.title('Angle[R(w)]')
+            plt.xlabel('THz')
+            plt.subplot(223)
+            plt.plot(pulse_in.T*1000, ifftshift(np.real(self.IFFT_t(\
+                    self.R - (1-self.f_R)))), 'bo')
+            plt.plot(pulse_in.T*1000, ifftshift(np.real(self.IFFT_t(\
+                    self.R0 - (1-self.f_R0)))), 'r')
+            plt.title('Abs[R[t]]')
+            plt.xlim([0,1000])
+            plt.xlabel('fs')
+            plt.subplot(224)
+            plt.plot(self.omegas/(2*np.pi), abs(self.FFT_t(self.A)))
+            plt.title('Abs[A[w]]')
+            plt.xlabel('THz')
+            plt.show()
                 
         # Load up parameters
-        self.A[:]       = self.conditional_fftshift(pulse_in.AT, verify=True)
+        self.A[:]       = self.conditional_fftshift(pulse_in.AT)
+        
         self.omegas[:]  = self.conditional_fftshift(self.omegas)
         # self.betas[:]   = self.conditional_fftshift(self.betas)
         self.alpha[:]   = self.conditional_fftshift(self.alpha)
@@ -244,6 +245,10 @@ class SSFM:
         as is the factor of pulse_width.
         """
         
+        if self.disable_Raman:
+            self.R[:]=1
+            return
+
         # Laserfoam raman function.
         TAU1 = self.tau_1
         TAU2 = self.tau_2
@@ -393,30 +398,35 @@ class SSFM:
         return self.IFFT_t(-1.0j*self.omegas * Aw)
 
     def NonlinearOperator(self,A):
-        if self.disable_Raman:
-            if self.disable_self_steepening:
-                return 1j*self.gamma*np.abs(A)**2
-                
-            self.Aw[:] = self.FFT_t(A)
-            self.dA[:] = self.Deriv(A)
-            
-            return 1j*self.gamma*np.abs(A)**2 - \
-                   (self.gamma/self.w0)*(2.0*self.dA*A.conj() + A*self.dA.conj())
+        # DH commented this out on 2016-03-18
+        # it should be taken care of by setting
+        # self.R[:]=0 in CalculateRamanResponseFT
+        # if self.disable_Raman:
+ #            if self.disable_self_steepening:
+ #                return 1j*self.gamma*np.abs(A)**2
+ #
+ #            self.Aw[:] = self.FFT_t(A)
+ #            self.dA[:] = self.Deriv(A)
+ #
+ #            return 1j*self.gamma*np.abs(A)**2 - \
+ #                   (self.gamma/self.w0)*(2.0*self.dA*A.conj() + A*self.dA.conj())
+ #
+ #
+ #        else:
+        self.A2[:]  = np.abs(A)**2   
+        self.A2w[:] = self.FFT_t(self.A2)
+   
+        if self.disable_self_steepening:
+            return 1j*self.gamma*self.IFFT_t(self.R*self.A2w)
         else:
-            self.A2[:]  = np.abs(A)**2   
-            self.A2w[:] = self.FFT_t(self.A2)
-           
-            if self.disable_self_steepening:
-                return 1j*self.gamma*self.IFFT_t(self.R*self.A2w)
-            else:
-                self.Aw[:]      = self.FFT_t(A)
-                self.R_A2[:]    = self.IFFT_t(self.R*self.A2w)
-                self.dA[:]      = self.Deriv(self.Aw)
-                self.dA2[:]     = self.Deriv(self.A2w)
-                self.dR_A2[:]   = self.IFFT_t(self.R*self.FFT_t(self.dA2))
-                
-                return 1j*self.gamma*self.R_A2 - (self.gamma/self.w0)* \
-                       (self.dR_A2 + np.where(np.abs(A)>1.0E-15,self.dA*self.R_A2/(1.0e-20+A),0.0))
+            self.Aw[:]      = self.FFT_t(A)
+            self.R_A2[:]    = self.IFFT_t(self.R*self.A2w)
+            self.dA[:]      = self.Deriv(self.Aw)
+            self.dA2[:]     = self.Deriv(self.A2w)
+            self.dR_A2[:]   = self.IFFT_t(self.R*self.FFT_t(self.dA2))
+        
+            return 1j*self.gamma*self.R_A2 - (self.gamma/self.w0)* \
+                   (self.dR_A2 + np.where(np.abs(A)>1.0E-15,self.dA*self.R_A2/(1.0e-20+A),0.0))
 
 
     def RK4IP(self,A,h,direction):
@@ -430,7 +440,6 @@ class SSFM:
                         (self.A_I + self.k2/2.0)        
         self.temp[:] = self.IFFT_t_2(self.exp_D*self.FFT_t_2(self.A_I+self.k3))
         self.k4[:] = h * direction * self.NonlinearOperator(self.temp)*self.temp
-        #print np.sum(abs(self.A_I)),np.sum(abs(self.k1)),np.sum(abs(self.k2)),np.sum(abs(self.k3)),np.sum(abs(self.temp)),np.sum(abs(self.k4))
         if not self.suppress_iteration:
             print "ks: ",np.sum(np.abs(self.k1)),np.sum(np.abs(self.k2)),\
                     np.sum(np.abs(self.k3)),np.sum(np.abs(self.k2))
@@ -450,9 +459,43 @@ class SSFM:
         
         pulse_in : pulse object
             this is an instance of the :class:`pynlo.light.PulseBase.Pulse` class.
-        fiber : fiber object
-            this is an instance of the :class:`pynlo.media.fiber.FiberInstance` class.
         
+        fiber : fiber object
+            this is an instance of the :class:`pynlo.media.fibers.fiber.FiberInstance` class.
+        
+        n_steps : int
+            the number of steps requested in the integrator output. Note: the RK4IP integrator
+            uses an adaptive step size. It should pick the correct step size automatically,
+            so setting n_steps should not affect the accuracy, just the number of points that
+            are returned by this funciton.
+        
+        output_power : 
+            This parameter is a mystery
+    
+        reload_fiber_each_step : boolean
+            This flag determines if the fiber parameters should be reloaded every step. It is 
+            necessary if the fiber dispersion or gamma changes along the fiber length. 
+            :func:`pynlo.media.fibers.fiber.FiberInstance.set_dispersion_function` and 
+            :func:`pynlo.media.fibers.fiber.FiberInstance.set_dispersion_function` should be used
+            to specify how the dispersion and gamma change with the fiber length
+        
+        
+        Returns
+        -------
+        z_positions : array of float
+            an array of z-positions along the fiber (in meters)
+        
+        AW : 2D array of complex128
+            A 2D numpy array corresponding to the intensities in each *frequency* bin for each
+            step in the z-direction of the fiber. 
+        
+        AT : 2D array of complex128
+            A 2D numpy array corresponding to the intensities in each *time* bin for each
+            step in the z-direction of the fiber. 
+        
+        pulse_out : PulseBase object
+            the pulse after it has propagated through the fiber. This object is suitable for propagation 
+            through the next fiber!
         """
 
         n_steps = int(n_steps)
@@ -495,6 +538,72 @@ class SSFM:
 #        print "alpha out:",self.alpha
         self.cleanup()
         return z_positions, AW, AT, pulse_out
+    
+    def calculate_coherence(self, pulse_in, fiber, 
+                            num_trials=5, random_seed=None, noise_type='one_photon_freq',
+                            n_steps=50, output_power=None, reload_fiber_each_step=False):
+        """
+        This function runs :func:`pynlo.interactions.FourWaveMixing.SSFM.propagate` several times (given by num_trials),
+        each time adding random noise to the pulse. By comparing the electric fields of the different pulses,
+        and estimate of the coherence can be made. 
+                            
+        The parameters are the same as for :func:`pynlo.interactions.FourWaveMixing.SSFM.propagate`, except as listed below
+        
+        Parameters
+        ----------
+        
+        num_trials : int
+            this determines the number of trials to be run. 
+        
+        random_seed : int
+            this is the seed for the random noise generation. Default is None, which does not set a seed for the random
+            number generator, which means that the numbers will be completely randomized. 
+            Setting the seed to a number (i.e., random_seed=0) will still generate random numbers for each trial,
+            but the results from calculate_coherence will be completely repeatable.
+        
+        noise_type : str
+            this specifies the method for including random noise onto the pulse. 
+            see :func:`pynlo.light.PulseBase.Pulse.add_noise` for the different methods.
+        
+        Returns
+        -------
+        g12W : 2D numpy array
+            This 2D array gives the g12 parameter as a function of propagation distance and the frequency.
+            g12 gives a measure of the coherence of the pulse by comparing several different trials.
+        
+        results : list of results for each trial
+            This is a list, where each item of the list contains (z_positions, AW, AT, pulse_out), the results
+            obtained from :func:`pynlo.interactions.FourWaveMixing.SSFM.propagate`.
+        """
+        
+        results = []
+        for num in range(0, num_trials):
+
+            pulse = pulse_in.create_cloned_pulse()
+            pulse.add_noise(noise_type=noise_type)
+
+            y, AW, AT, pulse_out = self.propagate(pulse_in=pulse, fiber=fiber, n_steps=n_steps)
+
+            results.append((y, AW, AT, pulse_in, pulse_out))
+
+        
+        for n1, (y, E1, AT, pulsein, pulseout) in enumerate(results):
+            for n2, (y, E2, AT, pulsein, pulseout) in enumerate(results):
+                if n1 == n2: continue # don't compare the same trial
+
+                g12 = np.conj(E1)*E2/np.sqrt(np.abs(E1)**2 * np.abs(E2)**2)
+                if 'g12_stack' not in locals():
+                    g12_stack = g12
+                else:
+                    g12_stack = np.dstack((g12, g12_stack))
+
+
+        # print g12_stack.shape, g12_stack.transpose().shape
+        g12W = np.abs(np.mean(g12_stack, axis=2))  
+        
+        return g12W, results   
+                            
+        
         
     def propagate_to_gain_goal(self, pulse_in, fiber, n_steps, power_goal = 1,
                               scalefactor_guess = None, powertol = 0.05):
@@ -554,7 +663,7 @@ class SSFM:
 
     ### Lots of boring FFT code from here on out.
     def FFT_t(self, A):
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             if global_variables.PRE_FFTSHIFT:
                 self.fft_input[:] = A
                 return self.fft()                
@@ -567,7 +676,7 @@ class SSFM:
             else:
                 return ifftshift(scipy.fftpack.ifft(fftshift(A)))
     def IFFT_t(self, A):        
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             if global_variables.PRE_FFTSHIFT:
                 self.ifft_input[:] = A
                 return self.ifft()
@@ -580,19 +689,19 @@ class SSFM:
             else:
                 return ifftshift(scipy.fftpack.fft(fftshift(A)))
     def FFT_t_shift(self, A):
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             self.fft_input[:] = fftshift(A)
             return ifftshift(self.fft())
         else:
             return ifftshift(scipy.fftpack.ifft(fftshift(A)))
     def IFFT_t_shift(self, A):
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             self.ifft_input[:] = fftshift(A)
             return ifftshift(self.ifft())
         else:
             return ifftshift(scipy.fftpack.fft(fftshift(A)))
     def FFT_t_2(self, A):        
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             if global_variables.PRE_FFTSHIFT:
                 self.fft_input_2[:] = A
                 return self.fft_2()
@@ -605,7 +714,7 @@ class SSFM:
             else:
                 return ifftshift(scipy.fftpack.ifft(fftshift(A)))
     def IFFT_t_2(self, A):        
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             if global_variables.PRE_FFTSHIFT:
                 self.ifft_input_2[:] = A
                 return self.ifft_2()
@@ -618,7 +727,7 @@ class SSFM:
             else:
                 return ifftshift(scipy.fftpack.fft(fftshift(A)))
     def IFFT_t_3(self, A):        
-        if global_variables.USE_PYFFTW:
+        if PYFFTW_AVAILABLE:
             if global_variables.PRE_FFTSHIFT:                
                 self.ifft_input_3[:] = A
                 return self.ifft_3()
@@ -643,23 +752,15 @@ class SSFM:
             return np.linalg.norm(self.Af-self.Ac)/np.linalg.norm(self.Af)
         else:
             return np.linalg.norm(self.Af-self.Ac)
-    def conditional_ifftshift(self, x, verify = False):
+    def conditional_ifftshift(self, x):
         if global_variables.PRE_FFTSHIFT:
-            if verify == True:
-                chksum = np.sum(abs(x))
             x[:] = ifftshift(x)
-            if verify == True:
-                assert chksum == np.sum(abs(x))
             return x
         else:
             return x
-    def conditional_fftshift(self, x, verify = False):
+    def conditional_fftshift(self, x):
         if global_variables.PRE_FFTSHIFT:
-            if verify == True:
-                chksum = np.sum(abs(x))
             x[:] = fftshift(x)
-            if verify == True:
-                assert chksum == np.sum(abs(x))
             return x
         else:
             return x            

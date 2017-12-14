@@ -24,11 +24,14 @@ import os
 class JSONFiberLoader:
     """ Load fiber parameters from pickle file. """
     fiber_names = None
-    def __init__(self, fiber_collection="general_fibers"):
+    def __init__(self, fiber_collection="general_fibers", file_dir = None):
         """ Initialize by reading pickles fiber parameters. If you have a pickle
         containing your own fiber types, change general_fibers to your own
         (.pickle will be appended.)"""
-        root = os.path.abspath(os.path.dirname(__file__))
+        if file_dir is None:
+            root = os.path.abspath(os.path.dirname(__file__))
+        else:
+            root = file_dir
         picklefile = os.path.join(root, fiber_collection+'.txt')
         file_handle =  open(picklefile, 'r')
         data= file_handle.read()
@@ -38,7 +41,7 @@ class JSONFiberLoader:
         """ Print list of all fibers in database. """
         self.fiber_names = []
         for each in self.fibers.keys():
-            print each["name"]
+            print 'fiber: ',each
             self.fiber_names.append(each)
     def get_fiber(self, name):
         """ Retrieve fiber parameters for fiber "name" """
