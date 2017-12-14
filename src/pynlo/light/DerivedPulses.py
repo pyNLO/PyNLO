@@ -42,6 +42,7 @@ class SechPulse(Pulse):
                         
         ### Generate pulse
         if not power_is_avg:
+            # from https://www.rp-photonics.com/sech2_shaped_pulses.html
             self.set_AT( np.sqrt(power)/np.cosh(self.T_ps/T0_ps) )
         else:
             self.set_AT( 1 / np.cosh(self.T_ps/T0_ps) )
@@ -69,8 +70,9 @@ class GaussianPulse(Pulse):
         
         GDD = GDD
         TOD = TOD
-                   
-        self.set_AT( np.sqrt(power) * np.exp(-2.77*self.T_ps**2/(T0_ps**2)) ) # input field (W^0.5) 
+        
+        # from https://www.rp-photonics.com/gaussian_pulses.html
+        self.set_AT( np.sqrt(power) * np.exp(-2.77*0.5*self.T_ps**2/(T0_ps**2)) ) # input field (W^0.5) 
         if power_is_avg:            
             self.set_AT(self.AT * np.sqrt( power / ( frep_MHz*1.0e6 * self.calc_epp()) ))
         self.chirp_pulse_W(GDD, TOD)
