@@ -17,6 +17,9 @@ This file is part of pyNLO.
     along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
 @author: ycasg
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -70,7 +73,9 @@ class GaussianPulse(Pulse):
         TOD = TOD
                    
         self.set_AT( np.sqrt(power) * np.exp(-2.77*self.T_ps**2/(T0_ps**2)) ) # input field (W^0.5) 
-        self.set_epp(power / (frep_MHz*1e6))
+        if power_is_avg:
+            self.set_epp(power / (frep_MHz*1e6))
+                    
         self.chirp_pulse_W(GDD, TOD)
         self.chirp_pulse_T(chirp2, chirp3, T0_ps)
     

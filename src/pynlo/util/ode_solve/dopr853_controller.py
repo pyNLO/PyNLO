@@ -17,6 +17,10 @@ This file is part of pyNLO.
     along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
 @author: ycasg
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np 
 
 DEBUG = False

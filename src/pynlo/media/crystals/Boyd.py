@@ -18,6 +18,9 @@ This file is part of pyNLO.
     along with pyNLO.  If not, see <http://www.gnu.org/licenses/>
 @author: ycasg
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 def load(crystal_instance, params):
     """ Load simple crystal with fixed refractive index and deff. """
