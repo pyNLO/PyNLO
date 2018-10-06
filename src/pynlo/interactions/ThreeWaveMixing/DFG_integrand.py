@@ -270,8 +270,9 @@ class dfg_problem:
             domain_lb.append(z_current+self.crystal.pp(z_current) * 0.5)
             domain_ub.append(z_current+self.crystal.pp(z_current) * 1.0)
             z_current += self.crystal.pp(z_current)
+            #print("precomputed",self.crystal.pp(z_current)," at z=",z_current)
             if self.crystal.pp(z_current) <= 1e-6:
-                print("Error: poling period too small")
+                print("Error: poling period",self.crystal.pp(z_current)," at z=",z_current,"is too small")
         self.domain_lb = np.array(domain_lb)
         self.domain_ub = np.array(domain_ub)
         plt.plot(self.domain_lb)

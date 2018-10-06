@@ -20,7 +20,7 @@ This file is part of pyNLO.
 
 import numpy as np
 from scipy.interpolate import interp1d
-from scipy import constants 
+from pynlo.util import IFFT_t
 from pynlo.light.PulseBase import Pulse
 
 class SechPulse(Pulse):
@@ -70,8 +70,7 @@ class GaussianPulse(Pulse):
         TOD = TOD
                    
         self.set_AT( np.sqrt(power) * np.exp(-2.77*self.T_ps**2/(T0_ps**2)) ) # input field (W^0.5) 
-        if power_is_avg:            
-            self.set_AT(self.AT * np.sqrt( power / ( frep_MHz*1.0e6 * self.calc_epp()) ))
+        self.set_epp(power / (frep_MHz*1e6))
         self.chirp_pulse_W(GDD, TOD)
         self.chirp_pulse_T(chirp2, chirp3, T0_ps)
     
