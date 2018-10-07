@@ -17,11 +17,13 @@ This file is part of pyNLO.
     along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
 @author: ycasg
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
 from scipy.interpolate import interp1d
-from scipy import constants 
-import exceptions
+from pynlo.util import IFFT_t
 from pynlo.light.PulseBase import Pulse
 
 class SechPulse(Pulse):
@@ -171,7 +173,7 @@ class FROGPulse(Pulse):
             self.set_AT(self.AT * e_scale )
 
         except IOError:
-            print 'File not found.'
+            print ('File not found.' )
 
 class NoisePulse(Pulse):
     def __init__(self, center_wavelength_nm, time_window_ps = 10., NPTS = 2**8,
@@ -272,4 +274,4 @@ class CWPulse(Pulse):
             self.A  = self.A * e_scale
                 
         except IOError:
-            print 'File not found.'
+            print ('File not found.')

@@ -19,9 +19,13 @@ This file is part of pyNLO.
     along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
 @author: ycasg
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 from pynlo.media.crystals.CrystalContainer import Crystal
-import exceptions 
+
 
 class AgGaSe2(Crystal):
     def __init__(self, theta = 0.0, **params):
@@ -84,7 +88,7 @@ class AgGaSe2(Crystal):
             return no
         elif axis == 'e':
             return ne
-        raise exceptions.ValueError("Axis was ",str(axis),"; must be 'mix', 'o', or 'e'")
+        raise ValueError("Axis was ",str(axis),"; must be 'mix', 'o', or 'e'")
     def phasematch(self, pump_wl_nm, sgnl_wl_nm, idlr_wl_nm, return_wavelength = False):
         """ Phase match mixing between pump (aligned to a mix of ne and no) and
             signal and idler (aligned to ordinary axis.)"""
@@ -92,17 +96,17 @@ class AgGaSe2(Crystal):
         new_wl = 0.0
         if pump_wl_nm is None:
             pump_wl_nm = 1.0/(1.0/idlr_wl_nm + 1.0/sgnl_wl_nm)
-            print 'Setting pump to ',pump_wl_nm
+            print ('Setting pump to ',pump_wl_nm)
             RET_WL = True
             new_wl = pump_wl_nm
         if sgnl_wl_nm is None:
             sgnl_wl_nm = 1.0/(1.0/pump_wl_nm - 1.0/idlr_wl_nm)
-            print 'Setting signal to ',sgnl_wl_nm
+            print ('Setting signal to ',sgnl_wl_nm)
             RET_WL = True
             new_wl = sgnl_wl_nm
         if idlr_wl_nm is None:
             idlr_wl_nm = 1.0/(1.0/pump_wl_nm - 1.0/sgnl_wl_nm)
-            print 'Setting idler to ',idlr_wl_nm
+            print ('Setting idler to ',idlr_wl_nm)
             RET_WL = True
             new_wl = idlr_wl_nm
             
@@ -113,7 +117,7 @@ class AgGaSe2(Crystal):
         n_soln  = (ks+ki) / kp_0
         n_e     = self.n(pump_wl_nm, 'e')
         n_o     = self.n(pump_wl_nm, 'o')
-        print 'n_e @ pump: ',n_e, ';\t n_o @ pump: ',n_o
+        print ('n_e @ pump: ',n_e, ';\t n_o @ pump: ',n_o)
         a = n_e**2 - n_o**2
         b = 0.0
         c = n_o**2 - n_e**2 * n_o**2 / (n_soln**2)
@@ -121,9 +125,9 @@ class AgGaSe2(Crystal):
         if x < 0:
             x = ( -b - np.sqrt(b**2-4*a*c) )/ (2.0  * a)
         if np.isnan(np.arccos(x)) :
-            raise exceptions.AttributeError('No phase matching condition.')
+            raise AttributeError('No phase matching condition.')
         theta = np.arccos(x)
-        print 'Angle set to ',360*theta / (2.0*np.pi)
+        print ('Angle set to ',360*theta / (2.0*np.pi) )
         if RET_WL and return_wavelength:
             return (theta, new_wl)
         else:

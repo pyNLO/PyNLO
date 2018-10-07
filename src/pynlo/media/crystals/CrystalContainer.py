@@ -17,7 +17,10 @@ This file is part of pyNLO.
     along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
 @author: ycasg
 """
-import exceptions
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 from scipy import misc, optimize
 from scipy.constants import speed_of_light
@@ -35,17 +38,17 @@ class Crystal:
                             'damage_threshold_info' : ''}
     
     def __init__(self, params):                
-        if params.has_key('length'):            
+        if 'length' in params.keys():
             self._length = params['length']
         else:
             self._length = 1.0
-        if params.has_key('enable_caching'):
+        if 'enable_caching' in params.keys():
             self._enable_caching = params['enable_caching']
         else:
             self._enable_caching = False
             
     def set_pp_chirp(self, start, stop):
-        self.pp   = lambda(x): start + (stop-start) * x /self.length        
+        self.pp   = lambda x: start + (stop-start) * x /self.length        
     def get_pulse_k(self, pulse_instance, axis = None):
         """ Return vector of angular wavenumbers (m^-1) for the pulse_instance's 
             frequency grid inside the crystal """
@@ -58,7 +61,7 @@ class Crystal:
         """ Return vector of indices of refraction for the pulse_instance's 
             frequency grid inside the crystal """
         if self._enable_caching:
-            if self._cached_ns.has_key(pulse_instance.cache_hash + str(axis)):
+            if pulse_instance.cache_hash + str(axis) in self._cached_ns.keys():
                 return self._cached_ns[pulse_instance.cache_hash + str(axis)]
             else:
                 if axis is None:
@@ -76,7 +79,7 @@ class Crystal:
         """ Calculate group velocity vg at 'wavelengths_nm' [nm] along 'axis'
             in units of nm/ps """
         # Equation 4.7.7b in Verdeyen
-        fn = lambda(x): self.n(x, axis)
+        fn = lambda x: self.n(x, axis)
         dn_dl = misc.derivative(fn, wavelengths_nm, dx = 0.1, n = 1, order = 11)
         vg_inverse = (1.0 / self._c_nm_ps) * (fn(wavelengths_nm) - wavelengths_nm * dn_dl)
         return 1.0 / vg_inverse
@@ -95,7 +98,7 @@ class Crystal:
     def calculate_D_ps_nm_km(self, wavelengths_nm, axis = None):
         """ Calculate crystal dispersion at 'wavelengths_nm' [nm] along 'axis' in
             standard photonic engineering units ps/nm/km"""        
-        fn = lambda(x): self.n(x, axis)
+        fn = lambda x: self.n(x, axis)
         d2n_dl2 = misc.derivative(fn, wavelengths_nm, dx = 0.1, n = 2, order = 11)
         D1      = (wavelengths_nm / self._c_nm_ps) * d2n_dl2 # units are ps/nm/nm
         D       = D1 * 1.0e12

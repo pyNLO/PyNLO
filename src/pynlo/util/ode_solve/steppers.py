@@ -4,9 +4,11 @@ ODE solver, adapted from Numerical Recipes
 
 @author: ycasg
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
-import exceptions
-import warnings
 
 np.seterr(all='warn')
 
@@ -87,14 +89,14 @@ class Output:
         y = s.dense_out(xout, h)
         if self.ysave.dtype != y.dtype:   
             errmsg = 'Integrand returns ',str(y.dtype),' but workspaces are initialized to ',str(self.ysave.dtype),'!'
-            raise exceptions.TypeError(errmsg)
+            raise TypeError(errmsg)
         self.ysave[self.count, :]   = y
         self.xsave[self.count]      = xout
         self.count += 1
     def save(self, x, y):
         if self.ysave.dtype != y.dtype:            
             errmsg = 'Integrand returns ',str(y.dtype),' but workspaces are initialized to ',str(self.ysave.dtype),'!'
-            raise exceptions.TypeError(errmsg)
+            raise TypeError(errmsg)
         if self.kmax <= 0:
             return
         if self.count == self.kmax:
@@ -106,7 +108,7 @@ class Output:
         """ nstp is current step number, current values are x & y, Stepper is s
         and step size is h"""
         if not self.dense:
-            e = exceptions.AttributeError('Dense output is not set in Output!')
+            e = AttributeError('Dense output is not set in Output!')
             raise e
         if nstp == 1:
             self.save(x,y)
@@ -209,7 +211,7 @@ class ODEint:
             self.out.out(-1, self.x1, self.y, self.s, self.h)
         else:
             self.out.save(self.x1, self.y)
-        for self.nstp in xrange(self.MAXSTP):            
+        for self.nstp in range(self.MAXSTP):            
             if (self.s.x+self.h*1.0001 - self.x2 ) / (self.x2-self.x1) > 0.0:
                 self.h = self.x2-self.s.x # If we would overshoot x2, reduce step size
             self.s.step(self.h, self.RHS_class)
@@ -229,8 +231,8 @@ class ODEint:
                     self.out.save(self.s.x, self.s.y)
                 return
             if abs(self.s.hnext) <= self.hmin:
-                e = exceptions.RuntimeError('Step size below minimum specified value.')
+                e = RuntimeError('Step size below minimum specified value.')
                 raise e
             self.h = self.s.hnext
-        e = exceptions.RuntimeError('Integrator took too many steps without finishing.')
+        e = RuntimeError('Integrator took too many steps without finishing.')
         raise e

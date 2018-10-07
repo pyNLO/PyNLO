@@ -17,6 +17,10 @@ This file is part of pyNLO.
     along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
 @author: ycasg
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -229,8 +233,8 @@ class SSFM:
         self.alpha[:]   = self.conditional_fftshift(self.alpha)
         self.R[:]       = self.conditional_fftshift(self.R)
         self.R0[:]      = self.conditional_fftshift(self.R0)
-        print 'pulse energy in ',np.sum(abs(pulse_in.AT))
-        print 'copied as  ',np.sum(abs(self.A))
+        print ('pulse energy in ',np.sum(abs(pulse_in.AT)) )
+        print ('copied as  ',np.sum(abs(self.A)) )
         
     #-----------------------------------------------------------------------
     # Calculates the Fourier Transform of R(T). See pg 49 of G. P. Agrawal's 
@@ -254,7 +258,7 @@ class SSFM:
         TAU2 = self.tau_2
         F_R = self.f_R
         C = (TAU1**2+TAU2**2)/(TAU1*TAU2**2)        
-        for i in xrange(pulse.NPTS):
+        for i in range(pulse.NPTS):
             omega = self.omegas[i]
             H_R = C*TAU1*TAU2**2 / \
                   (TAU1**2 + TAU2**2 - 2j*omega*TAU1**2*TAU2 - TAU1**2*TAU2**2*omega**2)
@@ -323,8 +327,8 @@ class SSFM:
             old_dz = dz
             new_dz = dz
             if not self.suppress_iteration:
-                print "iteration:",self.iter,"dz:",dz,"distance:", dist,\
-                      "local error", delta                
+                print ("iteration:",self.iter,"dz:",dz,"distance:", dist,\
+                      "local error", delta )
 
             if delta > 2.0*self.local_error:
                 # Discard the solution, decrease step
@@ -441,8 +445,8 @@ class SSFM:
         self.temp[:] = self.IFFT_t_2(self.exp_D*self.FFT_t_2(self.A_I+self.k3))
         self.k4[:] = h * direction * self.NonlinearOperator(self.temp)*self.temp
         if not self.suppress_iteration:
-            print "ks: ",np.sum(np.abs(self.k1)),np.sum(np.abs(self.k2)),\
-                    np.sum(np.abs(self.k3)),np.sum(np.abs(self.k2))
+            print ( "ks: ",np.sum(np.abs(self.k1)),np.sum(np.abs(self.k2)),\
+                    np.sum(np.abs(self.k3)),np.sum(np.abs(self.k2)) )
         return self.IFFT_t_2(self.exp_D * self.FFT_t_2(self.A_I + self.k1/6.0 +\
                 self.k2/3.0 + self.k3/3.0)) + self.k4/6.0
 
@@ -510,8 +514,8 @@ class SSFM:
         AW = np.complex64(np.zeros((pulse_in.NPTS, n_steps)))
         AT = np.complex64(np.copy(AW))
         
-        print "Pulse energy before", fiber.fibertype,":", \
-              1e9 * pulse_in.calc_epp(), 'nJ'          
+        print ("Pulse energy before", fiber.fibertype,":", \
+              1e9 * pulse_in.calc_epp(), 'nJ' )
               
         pulse_out = Pulse()        
         pulse_out.clone_pulse(pulse_in)
@@ -520,7 +524,7 @@ class SSFM:
         
 
         for i in range(n_steps):                        
-            print "Step:", i, "Distance remaining:", fiber.length * (1 - np.float(i)/n_steps)
+            print ("Step:", i, "Distance remaining:", fiber.length * (1 - np.float(i)/n_steps) )
             
             if reload_fiber_each_step:
                 self.load_fiber_parameters(pulse_in, fiber, output_power, z=i*delta_z) 
@@ -529,12 +533,12 @@ class SSFM:
             AW[:,i] = self.conditional_ifftshift(self.FFT_t_2(self.A))
             AT[:,i] = self.conditional_ifftshift(self.A)
             pulse_out.set_AT(self.conditional_ifftshift(self.A))
-            print "Pulse energy after:", \
-              1e9 * pulse_out.calc_epp(), 'nJ'
+            print ("Pulse energy after:", \
+              1e9 * pulse_out.calc_epp(), 'nJ' )
         pulse_out.set_AT(self.conditional_ifftshift(self.A))
 
-        print "Pulse energy after", fiber.fibertype,":", \
-              1e9 * pulse_out.calc_epp(), 'nJ'
+        print ( "Pulse energy after", fiber.fibertype,":", \
+              1e9 * pulse_out.calc_epp(), 'nJ' )
 #        print "alpha out:",self.alpha
         self.cleanup()
         return z_positions, AW, AT, pulse_out
@@ -648,7 +652,7 @@ class SSFM:
             # Update scalefactor and go to top of loop
             scalefactor = scalefactor_revised
             scalefactor_revised = (power_goal - yint)/slope                            
-        print 'Updated final power:',modeled_avg_power,'W'        
+        print ('Updated final power:',modeled_avg_power,'W'         )
         return (self.propagate(pulse_in, fiber,
                               n_steps,
                               output_power = power_goal * output_scale),
@@ -657,8 +661,8 @@ class SSFM:
         ''' Function for testing Raman response function. This plots Generates 
             R[w] and makes plots, but does not actually integrate anything.'''
         # Copy parameters from pulse and fiber into class-wide variables                    
-        print "Pulse energy before", fiber.fibertype,":", \
-              1e9 * pulse_in.calc_epp(), 'nJ'          
+        print ( "Pulse energy before", fiber.fibertype,":", \
+              1e9 * pulse_in.calc_epp(), 'nJ' )
         self.setup_fftw(pulse_in, fiber, output_power, raman_plots = True)
 
     ### Lots of boring FFT code from here on out.

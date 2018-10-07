@@ -3,11 +3,14 @@
 DFG integation results writer. Saves numerically integrated
 "DFGintegrand" using pyTables / HDF5.
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 import tables
 from pynlo.util.pynlo_ffts import IFFT_t
 from pynlo.light.PulseBase import Pulse
-import exceptions
 
 class DFGReader:
     """ Class to read saved DFG modeling runs."""
@@ -34,7 +37,7 @@ class DFGReader:
         if run_num is None:
             run_num = self.run_ctr - 1
         if run_num < 0 or run_num >= self.run_ctr:
-            raise exceptions.IndexError(str(run_num)+' not a valid run index.')
+            raise IndexError(str(run_num)+' not a valid run index.')
         param = self.tables_file.get_node(self.root_name+'/run'+str(run_num)+\
                 '/param')[0]
         return param
@@ -45,7 +48,7 @@ class DFGReader:
         if run_num is None:
             run_num = self.run_ctr - 1
         if run_num < 0 or run_num >= self.run_ctr:
-            raise exceptions.IndexError(str(run_num)+' not a valid run index.')
+            raise IndexError(str(run_num)+' not a valid run index.')
         if z_num is None:
             z_num = -1
             
@@ -98,7 +101,7 @@ class DFGWriter:
         try:
             self.root = self.tables_file.create_group('/', param_name)
         except tables.NodeError:
-            print 'Parameter "'+param_name+'" already in table; deleting existing data.'
+            print ('Parameter "'+param_name+'" already in table; deleting existing data.')
             self.tables_file.remove_node('/', param_name)
             self.root = self.tables_file.create_group('/', param_name)
             

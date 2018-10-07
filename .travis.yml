@@ -4,9 +4,18 @@ matrix:
   include:
     # "Recommended" environments: More recent versions, for Py2 and Py3.
     - python: "2.7"
-      env: DEPS="libgfortran=1.0 numpy=1.9 scipy=0.17 matplotlib=1.4 pillow<3 pandas=0.16 scikit-image=0.11 pyyaml numba=0.20 pytables pyfftw"
-
-
+      env: DEPS="libgfortran=1.0 numpy=1.9 scipy=0.17 matplotlib=1.4 pillow<3 pandas=0.16 scikit-image=0.11 pyyaml numba=0.20 pytables"
+    - python: "3.5"
+      env: DEPS="libgfortran=1.0 numpy scipy matplotlib=1.4 pillow<3 pandas scikit-image pyyaml numba pytables"
+addons:
+   apt: 
+     packages:
+      - libfftw3-dev 
+      - libatlas-dev 
+      - libatlas-base-dev 
+      - liblapack-dev 
+      - libblas-dev 
+      - gfortran
 install:
   # See:
   # https://groups.google.com/a/continuum.io/forum/#!topic/conda/RSFENqovnro
@@ -22,6 +31,7 @@ install:
   - which python
   - conda info
   - conda list
+  - pip install pyfftw
   - python setup.py install
   - echo $PATH
   - ls -lh
@@ -32,7 +42,7 @@ before_install:
   - ./miniconda.sh -b -p /home/travis/mc
   - export PATH=/home/travis/mc/bin:$PATH
 script:
-  - python -m unittest discover src -v "*test.py"
+  - python -m unittest discover src -v -p "*test.py"
 deploy:
   provider: pypi
   user: "ycasg"

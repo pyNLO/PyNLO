@@ -12,14 +12,15 @@ Defines:
 Authors: Dan Maser, Gabe Ycas
 """
 
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
 import scipy.fftpack as fftpack
 from copy import deepcopy
 from scipy import constants
 from pynlo.light import OneDBeam, OneDBeam_highV_WG
-import exceptions
 from pynlo.light.DerivedPulses import NoisePulse
 from pynlo.light.PulseBase import Pulse
 from matplotlib import pyplot as plt
@@ -85,7 +86,8 @@ class dfg_problem:
         # center frequencies. The center matching is implicitly used in the
         # mixing calculations to conserve energy
         idler_cwl_natural = 1.0/(1.0/pump_in.center_wavelength_nm -\
-                             1.0/sgnl_in.center_wavelength_nm)   
+                             1.0/sgnl_in.center_wavelength_nm)
+
         idlr_in = NoisePulse(center_wavelength_nm   = idler_cwl_natural, 
                              frep_MHz               = pump_in.frep_MHz,
                              NPTS                   = pump_in.NPTS,
@@ -94,11 +96,13 @@ class dfg_problem:
 
         # Double check that fields do not overlap
         if ( max(pump_in.wl_nm) > min(sgnl_in.wl_nm) ): 
-            raise exceptions.ValueError("Pump and signal field grids overlap.")
+            print ("pump_max: ", max(pump_in.wl_nm))            
+            print ("sgnl min: ", min(sgnl_in.wl_nm))            
+            raise ValueError("Pump and signal field grids overlap.")
         if ( max(sgnl_in.wl_nm) > min(idlr_in.wl_nm) ):
-            print "sgnl max: ", max(sgnl_in.wl_nm)
-            print "idlr min: ", min(idlr_in.wl_nm)
-            raise exceptions.ValueError("Signal and idler field grids overlap.")
+            print ("sgnl max: ", max(sgnl_in.wl_nm))
+            print ("idlr min: ", min(idlr_in.wl_nm))
+            raise ValueError("Signal and idler field grids overlap.")
         self.idlr_in = idlr_in
 
         self.pump = deepcopy(pump_in)
@@ -116,7 +120,7 @@ class dfg_problem:
         self.frep = sgnl_in.frep_mks
         self.veclength = sgnl_in.NPTS
         if not pump_in.NPTS == sgnl_in.NPTS == idlr_in.NPTS:
-            raise exceptions.ValueError("""Pump, signal, and idler do not have
+            raise ValueError("""Pump, signal, and idler do not have
                                             same length.""")
         if self._wg_mode == False:
             if self.crystal.mode == 'BPM':
@@ -268,8 +272,9 @@ class dfg_problem:
             domain_lb.append(z_current+self.crystal.pp(z_current) * 0.5)
             domain_ub.append(z_current+self.crystal.pp(z_current) * 1.0)
             z_current += self.crystal.pp(z_current)
+            #print("precomputed",self.crystal.pp(z_current)," at z=",z_current)
             if self.crystal.pp(z_current) <= 1e-6:
-                print("Error: poling period too small")
+                print("Error: poling period",self.crystal.pp(z_current)," at z=",z_current,"is too small")
         self.domain_lb = np.array(domain_lb)
         self.domain_ub = np.array(domain_ub)
         plt.plot(self.domain_lb)
@@ -299,7 +304,7 @@ class dfg_problem:
         elif self.crystal.mode == 'BPM' or self.crystal.mode == 'simple':
             deff = self.crystal.deff
         else:
-            raise exceptions.AttributeError('Crystal type not known; deff not set.')
+            raise AttributeError('Crystal type not known; deff not set.')
         # After epic translation of Dopri853 from Numerical Recipes' C++ to
         # native Python/NumPy, we can use complex numbers throughout:
         t = z / float(self.approx_pulse_speed)
@@ -465,14 +470,13 @@ class dfg_problem:
         sgnl_out = solver_out.ysave[0:solver_out.count, npoints  : 2*npoints]
         idlr_out = solver_out.ysave[0:solver_out.count, 2*npoints: 3*npoints]
         zs       = solver_out.xsave[0:solver_out.count]
-        print 'Pulse velocity is ~ '+str(self.approx_pulse_speed*1e-12)+'mm/fs'
+        print ('Pulse velocity is ~ '+str(self.approx_pulse_speed*1e-12)+'mm/fs' )
         print('ks: '+str(self.k_p_0)+' '+str(self.k_s_0)+' '+str(self.k_i_0))
         
         pump_pulse_speed = constants.speed_of_light / self.n_p[self._pump_center_idx]
                                   
-        for i in xrange(solver_out.count):
+        for i in range(solver_out.count):
             z = zs[i]
-            print z
             t =  z / pump_pulse_speed
 
             phi_p = np.exp(1j * ((self.k_p + self.k_p_0) * z - t * self.pump.W_mks) )

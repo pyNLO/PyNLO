@@ -17,9 +17,13 @@ This file is part of pyNLO.
     along with pyNLO.  If not, see <http://www.gnu.org/licenses/>.
 @author: ycasg
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 from scipy import constants, misc, signal, integrate
-import exceptions
+
 
 class TreacyCompressor:
     """ This class calculates the effects of a grating-based pulse compressor,
@@ -72,8 +76,8 @@ class TreacyCompressor:
         l = wavelength_nm * 1.0e-9
         # First solve the grating equation {3} for the diffracted angle
         if np.any((l/self.d  - np.sin(self.g))< -1) or np.any((l/self.d  - np.sin(self.g)) > 1):
-            print "Bad value for argument of arcsin: ",\
-                l/self.d  - np.sin(self.g),'. You are probably asking for diffraction of an impossible color (this wavelength is ',l*1e9,'nm. Coercing to [-1,1].'
+            print( "Bad value for argument of arcsin: ",\
+                l/self.d  - np.sin(self.g),'. You are probably asking for diffraction of an impossible color (this wavelength is ',l*1e9,'nm. Coercing to [-1,1].' )
         val = l/self.d  - np.sin(self.g)
         if type(val) == np.ndarray:
             val[val>1] = 1
@@ -81,7 +85,7 @@ class TreacyCompressor:
 
         alpha = np.arcsin(val )
         if display_angle:
-            print 'diffraction angle = ',alpha * 360.0/(2.0*np.pi)
+            print ('diffraction angle = ',alpha * 360.0/(2.0*np.pi) )
         # Then calculate gamma (ok, this is not much work because b = gamma).
         # Calculate theta from {4}:
         theta = self.g-alpha
@@ -122,7 +126,7 @@ class TreacyCompressor:
         """ Calculate higher order dispersion by taking w - derivatives of
             dt/dw """        
         if dispersion_order < 3:
-            raise exceptions.ValueError('Order must be > 2. For TOD, specify 3.')
+            raise ValueError('Order must be > 2. For TOD, specify 3.')
         w_of_l = lambda x: 2.0*np.pi*constants.speed_of_light / (x*1.0e-9)
         l_of_w = lambda x: 1.0e9*2.0*np.pi*constants.speed_of_light / x
         
@@ -138,7 +142,7 @@ class TreacyCompressor:
         """ Calculate higher order dispersion by taking w - derivatives of
             dt/dw """        
         if dispersion_order < 1:
-            raise exceptions.ValueError('Order must be > 2. For GDD, specify 1.')
+            raise ValueError('Order must be > 2. For GDD, specify 1.')
         w_of_l = lambda x: 2.0*np.pi*constants.speed_of_light / (x*1.0e-9)    
         fn = lambda x:self.calc_dphi_domega(x, grating_separation_meters)        
         w0 = w_of_l(wavelength_nm)        
