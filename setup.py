@@ -11,10 +11,6 @@ if not on_rtd:
     install_requires=[
           "jsonpickle>=0.9.2",
           "jsonschema>=2.5.1",
-          "mock>=1.0.1",
-          "nose>=1.3.7",
-          "nose-cov>=1.6",
-          "nose-fixes>=1.3",
           "numpy>=1.9.2",          
           "scipy>=0.15.1"
           ]
@@ -22,6 +18,10 @@ else:
     np = None
     install_requires=[]
 
+#          "mock>=1.0.1",
+#          "nose>=1.3.7",
+#          "nose-cov>=1.6",
+#          "nose-fixes>=1.3",
 
 setup(name='pyNLO',
       version='0.1.1',
