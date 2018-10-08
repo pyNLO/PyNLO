@@ -31,10 +31,16 @@ class SechPulse(Pulse):
                  time_window_ps = 10., frep_MHz = 100., NPTS = 2**10, 
                  GDD = 0, TOD = 0, chirp2 = 0, chirp3 = 0,
                  power_is_avg = False):
-        """Generate sech pulse A(t) = sqrt(P0 [W]) * sech(t/T0 [ps])
+        """Generate a squared-hyperbolic secant "sech" pulse 
+                 A(t) = sqrt(P0 [W]) * sech(t/T0 [ps])
         centered at wavelength center_wavelength_nm (nm).
-        time_window (ps) sets temporal grid size. Optional GDD and TOD are
-        in ps^2 and ps^3."""
+        time_window (ps) sets temporal grid size. 
+        
+        Optional GDD and TOD are in ps^2 and ps^3.
+          
+        Note: The full-width-at-half-maximum (FWHM) is given by 
+                 T0_ps * 1.76   
+        """
         Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS)
         # make sure we weren't passed mks units        
         assert (center_wavelength_nm > 1.0) 
@@ -44,6 +50,7 @@ class SechPulse(Pulse):
                         
         ### Generate pulse
         if not power_is_avg:
+            # from https://www.rp-photonics.com/sech2_shaped_pulses.html
             self.set_AT( np.sqrt(power)/np.cosh(self.T_ps/T0_ps) )
         else:
             self.set_AT( 1 / np.cosh(self.T_ps/T0_ps) )
@@ -60,7 +67,11 @@ class GaussianPulse(Pulse):
         """Generate Gaussian pulse A(t) = sqrt(peak_power[W]) * 
             exp( -(t/T0 [ps])^2 / 2 ) centered at wavelength 
             center_wavelength_nm (nm). time_window (ps) sets temporal grid
-            size. Optional GDD and TOD are in ps^2 and ps^3."""
+            size. Optional GDD and TOD are in ps^2 and ps^3.
+        
+        Note: For this definition of a Gaussian pulse, T0_ps is the 
+              full-width-at-half-maximum (FWHM) of the pulse.
+        """
 
         Pulse.__init__(self, frep_MHz = frep_MHz, n = NPTS)
         # make sure we weren't passed mks units        
@@ -71,11 +82,11 @@ class GaussianPulse(Pulse):
         
         GDD = GDD
         TOD = TOD
-                   
-        self.set_AT( np.sqrt(power) * np.exp(-2.77*self.T_ps**2/(T0_ps**2)) ) # input field (W^0.5) 
-        if power_is_avg:
-            self.set_epp(power / (frep_MHz*1e6))
-                    
+        
+        # from https://www.rp-photonics.com/gaussian_pulses.html
+        self.set_AT( np.sqrt(power) * np.exp(-2.77*0.5*self.T_ps**2/(T0_ps**2)) ) # input field (W^0.5) 
+        if power_is_avg:            
+            self.set_AT(self.AT * np.sqrt( power / ( frep_MHz*1.0e6 * self.calc_epp()) ))
         self.chirp_pulse_W(GDD, TOD)
         self.chirp_pulse_T(chirp2, chirp3, T0_ps)
     
