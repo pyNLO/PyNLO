@@ -24,7 +24,7 @@ else:
 #          "nose-fixes>=1.3",
 
 setup(name='pyNLO',
-      version='0.1.1',
+      version='0.1.2',
       description='Python nonlinear optics',
       author='Gabe Ycas',
       author_email='ycasg@colorado.edu',
