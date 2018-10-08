@@ -580,11 +580,11 @@ class fftcomputer:
     def __init__(self, gridsize):
         self.gridsize = gridsize
         if PYFFTW_AVAILABLE:
-            self.corrin = pyfftw.n_byte_align_empty(gridsize*2,16,'complex128')
-            self.corrtransfer = pyfftw.n_byte_align_empty(gridsize*2,16,'complex128')
+            self.corrin = pyfftw.empty_aligned(gridsize*2,'complex128')
+            self.corrtransfer = pyfftw.empty_aligned(gridsize*2,'complex128')
             self.fft = pyfftw.FFTW(self.corrin,self.corrtransfer,direction='FFTW_FORWARD')
             
-            self.backout = pyfftw.n_byte_align_empty(gridsize*2,16,'complex128')
+            self.backout = pyfftw.empty_aligned(gridsize*2,'complex128')
             self.ifft = pyfftw.FFTW(self.corrtransfer,self.backout,direction='FFTW_BACKWARD')
         else:
             self.corrin  = np.zeros( (gridsize*2,), dtype = np.complex128)
