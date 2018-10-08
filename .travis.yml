@@ -7,6 +7,8 @@ matrix:
       env: DEPS="libgfortran=1.0 numpy=1.9 scipy=0.17 matplotlib=1.4 pillow<3 pandas=0.16 scikit-image=0.11 pyyaml numba=0.20 pytables"
     - python: "3.5"
       env: DEPS="libgfortran=1.0 numpy scipy matplotlib=1.4 pillow<3 pandas scikit-image pyyaml numba pytables"
+    - python: "3.6"
+      env: DEPS="libgfortran=1.0 numpy scipy matplotlib=1.4 pillow<3 pandas scikit-image pyyaml numba pytables"	  
 addons:
    apt: 
      packages:
@@ -37,7 +39,7 @@ install:
   - ls -lh
 
 before_install:
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi
+  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi  
   - chmod +x miniconda.sh
   - ./miniconda.sh -b -p /home/travis/mc
   - export PATH=/home/travis/mc/bin:$PATH
