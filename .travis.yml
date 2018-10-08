@@ -1,55 +1,51 @@
 language: python
-
 matrix:
   include:
-    # "Recommended" environments: More recent versions, for Py2 and Py3.
-    - python: "2.7"
-      env: DEPS="libgfortran=1.0 numpy=1.9 scipy=0.17 matplotlib=1.4 pillow<3 pandas=0.16 scikit-image=0.11 pyyaml numba=0.20 pytables"
-    - python: "3.5"
-      env: DEPS="libgfortran=1.0 numpy scipy matplotlib pillow<3 pandas scikit-image pyyaml numba pytables"
-    - python: "3.6"
-      env: DEPS="libgfortran=1.0 numpy scipy matplotlib pandas scikit-image pyyaml numba pytables"	  
+  - python: '2.7'
+    env: DEPS="libgfortran=1.0 numpy=1.9 scipy=0.17 matplotlib=1.4 pillow<3 pandas=0.16
+      scikit-image=0.11 pyyaml numba=0.20 pytables"
+  - python: '3.5'
+    env: DEPS="libgfortran=1.0 numpy scipy matplotlib pillow<3 pandas scikit-image
+      pyyaml numba pytables"
+  - python: '3.6'
+    env: DEPS="libgfortran=1.0 numpy scipy matplotlib pandas scikit-image pyyaml numba
+      pytables"
 addons:
-   apt: 
-     packages:
-      - libfftw3-dev 
-      - libatlas-dev 
-      - libatlas-base-dev 
-      - liblapack-dev 
-      - libblas-dev 
-      - gfortran
+  apt:
+    packages:
+    - libfftw3-dev
+    - libatlas-dev
+    - libatlas-base-dev
+    - liblapack-dev
+    - libblas-dev
+    - gfortran
 install:
-  # See:
-  # https://groups.google.com/a/continuum.io/forum/#!topic/conda/RSFENqovnro
-  # - conda update --yes --no-deps conda
-  # OK, this used to *fix* the build, but now it *breaks* the build.
-  # If you're reading this, good luck out there. I'm not sure what to tell you.
-  - conda update --yes conda 
-  - conda config --add channels soft-matter
-  - conda create -n testenv --yes $DEPS pip nose setuptools python=$TRAVIS_PYTHON_VERSION
-  - source activate testenv
-  # for debugging...
-  - echo $PATH
-  - which python
-  - conda info
-  - conda list
-  - pip install pyfftw
-  - python setup.py install
-  - echo $PATH
-  - ls -lh
-
+- conda update --yes conda
+- conda config --add channels soft-matter
+- conda create -n testenv --yes $DEPS pip nose setuptools python=$TRAVIS_PYTHON_VERSION
+- source activate testenv
+- echo $PATH
+- which python
+- conda info
+- conda list
+- pip install pyfftw
+- python setup.py install
+- echo $PATH
+- ls -lh
 before_install:
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi  
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b -p /home/travis/mc
-  - export PATH=/home/travis/mc/bin:$PATH
+- if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh
+  -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh
+  -O miniconda.sh; fi
+- chmod +x miniconda.sh
+- "./miniconda.sh -b -p /home/travis/mc"
+- export PATH=/home/travis/mc/bin:$PATH
 script:
-  - python -m unittest discover src -v -p "*test.py"
+- python -m unittest discover src -v -p "*test.py"
 deploy:
   provider: pypi
-  user: "ycasg"
-  password: 
-    secure: "uzthn1H26f3qbrPUKQo+xRqz1BUesgMKGN0lDjPudLez5RSbAwwZRIBdcoXVg4imC5NMn2VY/DnmLE5YhfqQlZUQMjwAnU8ZwEJ0gOYNK4OrSGpl5cMRohYvNtdrwy3soD0HY/zKD2cliszHg/b+gl3LeBdTEKTmIl7jLCbVesdOExq3vDc6igWkpxxTIbtyLVpXeVjyd25r70SJa7HikIa1ML5zp0b8mWDzp+nd2MDwNADklUZ3fAPt2emcjwrNZxShUTVlERpFsB3qu+p5YAN+e9+dltI0CK4eJ6RMuNZGxjRcixTyf+N2TSbAQuojdyXPUWVxkfFgtsRyq3a4p3pCp4FgdYeG3rWx13d27qqzi1LKBEW0y1DK/b3tRLjT10D17zv3Sn0suC3Zd3B22OsJaSZ+e8iZ4ar5wu5QLE3wBpQdFEzNmvys2J+dtn+jrzmGeWiitJa2NqCVlOtSkCNvmV6iXd/NM/pzbWwu7LnhRT7dieA4hJCnzP/5bvxbPup81Vs71HciiE60fTF0NeDkGgvZwwBgDe/09GAQHh5FFpPjTiINJmglxe3Bg7EIMPuYZVe0SDz+76HyX+PYCE/cGXJ0o3mw27AjPAJfvLWpUNuO61Yi0djVvDIxAqelQ3+gprJL55umDzojTsH6TkLF/eooMgTm0UXyQ7nRqMk="
+  user: ycasg
+  password:
+    secure: YXBOlEy4f8RupLwppIaR32IoRGMBhOyRRbRMow9IqULft7BbvhKJPGzD/fBDwDACaHSKG/9EMHRzCearqZwlQUe75RyC4CDGaS9xh2UB99pekngoHmsl3DHqZzt1GbdJOmjBXtAkUV/GuYTI7DBSqRfSREmPPapO3iQEF2vzKexI92Ze4Dw1+UXZQ6uwxChKWIv4WL3TANUbNlRCD2VwWNrhlio3wyL2tAt2pJC4qEzbK9zVenIRJJtW/xmVsJR0OR+BjEOo5MMNmw7G2mbkJ5uZt/k+Gvxetl+8123YiINjGiY000L5Z7IHGzFvitahGVkr96PRm0fKqCk13dRLuH6YLZYGmsJtqz/uyx/te0HHw3XqIiyx+0zPK5+RPdGkn1kvcXI7cDEIGPPnof4bzGjwKUQsIvt5ih4p/q5aT5GwSMKi69P6F3RuTIv6KqutIZeg86hqtiQHP4YIjH+VUmb1O5M4SIX+uroIYuN0y3xbR58U9Tp8lJNOlRITBrUBLTj388J2bPwmbQE7DTU37kU9eMUAezw9hTYtYhINNJh3L3mdw8zETKw3LmGBnAI09PCgGgVRXu5MLsUYJLieeY9EuxmOEYe2xqpqKMwIZsld7UfrNA0iQqvCQPD6BPlnl7SKLy4f0grHFWsD4D3wGRnmXi/+ILTDTe1RSPPBPm4=
   on:
     tags: true
     branch: master
