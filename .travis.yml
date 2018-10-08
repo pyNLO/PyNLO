@@ -8,7 +8,7 @@ matrix:
     - python: "3.5"
       env: DEPS="libgfortran=1.0 numpy scipy matplotlib pillow<3 pandas scikit-image pyyaml numba pytables"
     - python: "3.6"
-      env: DEPS="libgfortran=1.0 numpy scipy matplotlib pillow<3 pandas scikit-image pyyaml numba pytables"	  
+      env: DEPS="libgfortran=1.0 numpy scipy matplotlib pandas scikit-image pyyaml numba pytables"	  
 addons:
    apt: 
      packages:
