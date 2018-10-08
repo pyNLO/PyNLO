@@ -1002,9 +1002,9 @@ class Pulse:
         
         # just take positive frequencies:
         h = np.shape(spectrogram)[0]
-        spectrogram = spectrogram[:h/2]
-        DELAYS      = DELAYS[:h/2]
-        FREQS       = FREQS[:h/2]
+        spectrogram = spectrogram[:h//2]
+        DELAYS      = DELAYS[:h//2]
+        FREQS       = FREQS[:h//2]
                 
         # calculate the extent to make it easy to plot:
         extent = (np.min(DELAYS), np.max(DELAYS), np.min(FREQS), np.max(FREQS))

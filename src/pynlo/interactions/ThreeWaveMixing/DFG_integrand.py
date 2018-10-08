@@ -579,13 +579,25 @@ class dfg_results_interface:
 class fftcomputer:
     def __init__(self, gridsize):
         self.gridsize = gridsize
-        self.corrin = pyfftw.n_byte_align_empty(gridsize*2,16,'complex128')
-        self.corrtransfer = pyfftw.n_byte_align_empty(gridsize*2,16,'complex128')
-        self.fft = pyfftw.FFTW(self.corrin,self.corrtransfer,direction='FFTW_FORWARD')
-        
-        self.backout = pyfftw.n_byte_align_empty(gridsize*2,16,'complex128')
-        self.ifft = pyfftw.FFTW(self.corrtransfer,self.backout,direction='FFTW_BACKWARD')
-        
+        if PYFFTW_AVAILABLE:
+            self.corrin = pyfftw.n_byte_align_empty(gridsize*2,16,'complex128')
+            self.corrtransfer = pyfftw.n_byte_align_empty(gridsize*2,16,'complex128')
+            self.fft = pyfftw.FFTW(self.corrin,self.corrtransfer,direction='FFTW_FORWARD')
+            
+            self.backout = pyfftw.n_byte_align_empty(gridsize*2,16,'complex128')
+            self.ifft = pyfftw.FFTW(self.corrtransfer,self.backout,direction='FFTW_BACKWARD')
+        else:
+            self.corrin  = np.zeros( (gridsize*2,), dtype = np.complex128)
+            self.corrtransfer  = np.zeros( (gridsize*2,), dtype = np.complex128)
+            self.backout = np.zeros( (gridsize*2,), dtype = np.complex128)
+            def pyfft_style_fft():
+                self.corrtransfer[:] = np.fft.fft(self.corrin) 
+                return self.corrtransfer
+            def pyfft_style_ifft():
+                self.backout[:] = np.fft.ifft(self.corrtransfer) 
+                return self.backout        
+            self.fft =  pyfft_style_fft
+            self.ifft = pyfft_style_ifft
     def corr(self, data1, data2):
         n = self.gridsize
         self.corrin[:] = 0
