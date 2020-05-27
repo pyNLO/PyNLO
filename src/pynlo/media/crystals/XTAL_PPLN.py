@@ -64,7 +64,7 @@ class Gayer5PctSellmeier:
     b1  = 	 2.860e-6
     b2  = 	 4.700e-8
     b3  = 	 6.113e-8
-    b4  = 	 1.526e-5
+    b4  = 	 1.516e-4
     T   =    30
     def __init__(self, T):
         self.set_T_degC(T)    
