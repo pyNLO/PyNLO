@@ -586,7 +586,7 @@ class SSFM:
             pulse = pulse_in.create_cloned_pulse()
             pulse.add_noise(noise_type=noise_type)
 
-            y, AW, AT, pulse_out = self.propagate(pulse_in=pulse, fiber=fiber, n_steps=n_steps)
+            y, AW, AT, pulse_out = self.propagate(pulse_in=pulse, fiber=fiber, n_steps=n_steps, reload_fiber_each_step=reload_fiber_each_step)
 
             results.append((y, AW, AT, pulse_in, pulse_out))
 
