@@ -524,7 +524,7 @@ class SSFM:
         
 
         for i in range(n_steps):                        
-            print ("Step:", i, "Distance remaining:", fiber.length * (1 - np.float(i)/n_steps) )
+            print ("Step:", i, "Distance remaining:", fiber.length * (1 - np.float16(i)/n_steps) )
             
             if reload_fiber_each_step:
                 self.load_fiber_parameters(pulse_in, fiber, output_power, z=i*delta_z) 
