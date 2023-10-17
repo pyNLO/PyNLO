@@ -24,7 +24,7 @@ from __future__ import print_function
 
 
 import numpy as np
-from scipy.misc import factorial
+from math import factorial
 from scipy import constants
 import matplotlib.pyplot as plt
 
