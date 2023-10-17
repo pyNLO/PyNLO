@@ -24,7 +24,7 @@ from __future__ import print_function
 import numpy as np
 import scipy.interpolate
 from pynlo.media.fibers.calculators import DTabulationToBetas
-from scipy.misc import factorial
+from math import factorial
 from scipy import constants
 from scipy.optimize import minimize
 from pynlo.util.pynlo_ffts import IFFT_t
